@@ -972,14 +972,34 @@ def _board_date_key(f, field):
     except Exception:
         return _dt.datetime.max
 
+def _is_overdue(date_str):
+    """True if the 'Mon YYYY' month is strictly before the current month."""
+    import datetime as _dt
+    if not date_str:
+        return False
+    try:
+        d = _dt.datetime.strptime(str(date_str), "%b %Y").date().replace(day=1)
+    except Exception:
+        return False
+    today_m = _dt.date.today().replace(day=1)
+    return d < today_m
+
 def build_board_card(f):
     area = f["area"]
     color_var, area_label = AREA_CONFIG.get(area, ("--platform", area))
+    col = board_col_of(f)
+    can_overdue = col not in ("shipped",)
     badges = []
     if f.get("disc_date"):
-        badges.append(f'<span class="bbadge disc">🔍 disc {esc(f["disc_date"])}</span>')
+        disc_over = can_overdue and col == "discovery" and _is_overdue(f["disc_date"])
+        cls = "bbadge disc overdue" if disc_over else "bbadge disc"
+        pre = "⚠ " if disc_over else ""
+        badges.append(f'<span class="{cls}">{pre}🔍 disc {esc(f["disc_date"])}</span>')
     if f.get("deliver_date"):
-        badges.append(f'<span class="bbadge deadline">🚀 {esc(f["deliver_date"])}</span>')
+        deliv_over = can_overdue and _is_overdue(f["deliver_date"])
+        cls = "bbadge deadline overdue" if deliv_over else "bbadge deadline"
+        pre = "⚠ " if deliv_over else ""
+        badges.append(f'<span class="{cls}">{pre}🚀 {esc(f["deliver_date"])}</span>')
     if f.get("pilot_date") and str(f["pilot_date"]).lower() not in ("", "nan", "none"):
         badges.append(f'<span class="bbadge pilot">🧪 {esc(f["pilot_date"])}</span>')
     if f.get("rollout_date") and str(f["rollout_date"]).lower() not in ("", "nan", "none"):
@@ -992,11 +1012,30 @@ def build_board_card(f):
     resp = f.get("responsible")
     resp_html = f'<div class="bresp">👤 {esc(resp)}</div>' if resp and str(resp).lower() not in ("nan", "none", "") else ""
     mkt_attr = ' data-mkt="1"' if f.get("marketing") else ""
+    card_over = can_overdue and _is_overdue(f.get("deliver_date"))
+    over_attr = ' data-overdue="1"' if card_over else ""
+    over_cls = " overdue-card" if card_over else ""
+
+    # ---- hidden detail payload (descriptions + document links) for the modal ----
+    desc_rows = []
+    for lbl, key in (("Product", "desc_product"), ("GTM", "desc_gtm"), ("Client", "desc_client")):
+        v = clean_desc(f.get(key, ""))
+        if v:
+            desc_rows.append(f'<div class="md-desc"><h4>{lbl}</h4><p>{esc(v)}</p></div>')
+    desc_html = "".join(desc_rows) or '<div class="md-empty">No description in the sheet yet.</div>'
+    link_items = []
+    for (label, css, url) in (f.get("links") or []):
+        link_items.append(f'<a class="md-link" href="{esc(url)}" target="_blank" rel="noopener">{esc(label)} ↗</a>')
+    links_html = (f'<div class="md-links-label">Documents</div><div class="md-links">{"".join(link_items)}</div>'
+                  if link_items else '<div class="md-links-label">Documents</div><div class="md-empty">No linked documents yet.</div>')
+    detail_html = f'<div class="bcard-detail" hidden>{desc_html}{links_html}</div>'
+
     return (
-        f'      <div class="bcard" data-area="{esc(area)}"{mkt_attr} style="border-left-color:var({color_var})">\n'
+        f'      <div class="bcard{over_cls}" data-area="{esc(area)}"{mkt_attr}{over_attr} style="border-left-color:var({color_var})">\n'
         f'        <div class="bcard-area"><span class="dot" style="background:var({color_var})"></span><span style="color:var({color_var})">{esc(area_label)}</span></div>\n'
         f'        <div class="bcard-title">{esc(f["title"])}</div>\n'
         f'        {stage_html}{badges_html}{resp_html}\n'
+        f'        {detail_html}\n'
         f'      </div>'
     )
 
