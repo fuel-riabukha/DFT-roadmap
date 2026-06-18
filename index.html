@@ -1,0 +1,2188 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Digital Finance Team — Product Roadmap 2026</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0d0f14; --surface: #161921; --border: rgba(255,255,255,0.07);
+    --text: #e8eaf0; --muted: #6b7280;
+    --forecast: #3b82f6; --ai: #8b5cf6; --reports: #10b981;
+    --dashboards: #f59e0b; --integrations: #f43f5e; --metrics: #06b6d4;
+    /* Digital Finance Team areas */
+    --platform: #3b82f6; --data: #06b6d4; --context: #8b5cf6;
+    --agents: #10b981; --workflows: #f59e0b; --cabinet: #f43f5e;
+    --settings: #6366f1; --artifacts: #ec4899; --slack: #14b8a6; --crosscut: #94a3b8;
+    --ship: #22c55e; --discovery: #f59e0b; --planned: #6366f1;
+  }
+  body { font-family: 'Sora', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 28px 28px; }
+
+  .header { margin-bottom: 20px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; position: sticky; top: 0; z-index: 100; background: #0d0f14; padding-top: 14px; margin-top: -14px; padding-bottom: 4px; }
+  #stickyAnchor { height: 0; position: sticky; top: 0; z-index: 9; }
+  .header-left h1 { font-size: 21px; font-weight: 700; letter-spacing: -0.5px; color: #fff; }
+  .header-left p { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+  .mode-toggle { display: flex; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 8px; padding: 3px; gap: 2px; flex-shrink: 0; }
+  .mode-btn { font-family: 'Sora', sans-serif; font-size: 11px; font-weight: 600; padding: 6px 14px; border-radius: 6px; border: none; background: transparent; color: var(--muted); cursor: pointer; transition: all 0.15s; }
+  .mode-btn.active { background: rgba(255,255,255,0.1); color: #fff; }
+
+  .controls-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 12px; flex-wrap: wrap; }
+  .filters { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  /* Search */
+  #roadmapSearch {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 4px 12px 4px 30px;
+    color: var(--text); font-family: 'Sora', sans-serif; font-size: 11px;
+    width: 180px; outline: none; transition: all 0.15s;
+  }
+  #roadmapSearch::placeholder { color: var(--muted); }
+  #roadmapSearch:focus { border-color: rgba(255,255,255,0.2); width: 220px; }
+  #searchWrap { position: relative; display: flex; align-items: center; }
+  #searchWrap svg { position: absolute; left: 9px; opacity: 0.4; pointer-events: none; }
+  #searchClear {
+    display: none; position: absolute; right: 9px;
+    background: none; border: none; color: var(--muted);
+    font-size: 14px; cursor: pointer; line-height: 1; padding: 0;
+  }
+  #searchClear:hover { color: #fff; }
+  #roadmapSearch:not(:placeholder-shown) ~ #searchClear { display: block; }
+  .filter-btn { font-family: 'Sora', sans-serif; font-size: 11px; font-weight: 500; padding: 4px 11px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); color: var(--muted); cursor: pointer; transition: all 0.15s; }
+  .filter-btn:hover, .filter-btn.active { color: #fff; border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.09); }
+  .filter-btn[data-filter="marketing"] { border-color: rgba(249,115,22,0.3); color: #f97316; background: rgba(249,115,22,0.08); }
+  .filter-btn[data-filter="marketing"]:hover, .filter-btn[data-filter="marketing"].active { background: rgba(249,115,22,0.18); border-color: rgba(249,115,22,0.5); color: #fb923c; }
+
+  .legend { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
+  .legend-dot { width: 7px; height: 7px; border-radius: 50%; }
+  .sep { width: 1px; height: 13px; background: var(--border); margin: 0 2px; }
+
+  /* DETAILED */
+  .timeline { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .col-header { padding: 11px 13px; border-radius: 10px 10px 0 0; position: sticky; top: var(--header-h, 0px); z-index: 10; }
+  .col-header .month { font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: #fff; }
+  .col-header .subtitle { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .col-now .col-header  { background: #0d1710; border-top: 2px solid var(--ship); }
+  .col-feb .col-header  { background: #0d1710; border-top: 2px solid var(--ship); }
+  .col-feb, .col-now, .col-apr, .col-may, .col-jun, .col-q3 { display: flex; flex-direction: column; }
+  .col-apr .col-header  { background: #0d1710; border-top: 2px solid var(--ship); }
+  .col-may .col-header  { background: #0f0f18; border-top: 2px solid var(--planned); }
+  .col-jun .col-header  { background: #131008; border-top: 2px solid var(--discovery); }
+  .col-q3  .col-header  { background: #0f1012; border-top: 2px solid #4b5563; }
+  .col-body { display: flex; flex-direction: column; gap: 7px; padding: 9px; background: var(--surface); border: 1px solid var(--border); border-top: none; border-radius: 0 0 10px 10px; }
+
+  .card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; transition: all 0.15s; }
+  .card:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.13); }
+  .card.hidden { display: none; }
+
+  /* Preview image */
+  .card-preview { position: relative; width: 100%; height: 120px; overflow: hidden; background: #0d0f14; border-bottom: 1px solid var(--border); display: none; cursor: pointer; }
+  .card-preview.loaded { display: block; }
+  .card-preview img { width: 100%; height: 100%; object-fit: cover; object-position: top; opacity: 0; transition: opacity 0.3s; display: block; }
+  .card-preview img.img-loaded { opacity: 1; }
+  .card-preview-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 50%, rgba(13,15,20,0.7) 100%); pointer-events: none; }
+  .card-preview-open {
+    position: absolute; bottom: 7px; right: 7px;
+    font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 600;
+    background: rgba(0,0,0,0.6); color: rgba(255,255,255,0.8);
+    border: 1px solid rgba(255,255,255,0.2); border-radius: 4px;
+    padding: 2px 7px; backdrop-filter: blur(4px);
+    text-decoration: none; pointer-events: all;
+    transition: all 0.12s;
+  }
+  .card-preview-open:hover { background: rgba(0,0,0,0.85); color: #fff; }
+
+  .card-content { padding: 9px 10px; }
+  .card-top { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+  .area-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .area-label { font-size: 9px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; opacity: 0.75; }
+  .status-badge { margin-left: auto; font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 10px; white-space: nowrap; }
+  .badge-ship      { background: rgba(34,197,94,0.15);  color: #22c55e; }
+  .badge-delivery  { background: rgba(34,197,94,0.15);  color: #22c55e; }
+  .badge-ready     { background: rgba(245,158,11,0.15); color: #f59e0b; }
+  .badge-discovery { background: rgba(99,102,241,0.15); color: #818cf8; }
+  .badge-planned   { background: rgba(107,114,128,0.12); color: #6b7280; }
+  .badge-shipped   { background: rgba(34,197,94,0.10);  color: #4ade80; border: 1px solid rgba(34,197,94,0.25); }
+
+  /* Marketing release indicator */
+  .card[data-marketing="true"] { border-left: 3px solid #f97316; }
+  .mkt-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    margin-left: 5px;
+    font-size: 9px; color: #f97316;
+    background: rgba(249,115,22,0.12);
+    border: 1px solid rgba(249,115,22,0.3);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-weight: 700; letter-spacing: 0.3px;
+    cursor: default;
+  }
+  .mkt-badge::before { content: "✦ "; }
+  .mkt-badge::after  { content: " marketing"; }
+
+  /* Past columns — hidden by default, revealed by toggle */
+  .col-past { display: none !important; }
+  .col-past.past-visible { display: flex !important; }
+
+  /* Past toggle button — sticky vertical pill left of timeline */
+  #pastToggleBtn {
+    display: none; /* shown via JS when past cols exist */
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 0;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    cursor: pointer; transition: all 0.15s;
+    flex-shrink: 0;
+    width: 26px;
+    position: sticky;
+    top: calc(var(--header-h, 120px) + 8px);
+    align-self: flex-start;
+  }
+  #pastToggleBtn:hover { background: rgba(255,255,255,0.08); color: #fff; border-color: rgba(255,255,255,0.15); }
+  /* Arrow — plain character, no rotation, points right (›) or left (‹) */
+  #pastToggleBtn .ptb-icon {
+    font-size: 15px; line-height: 1;
+    display: block;
+    transition: opacity 0.15s;
+  }
+  /* Label — vertical text, bottom to top */
+  #pastToggleBtn .ptb-text {
+    font-size: 9px; font-weight: 700; font-family: 'Sora', sans-serif;
+    letter-spacing: 0.6px; text-transform: uppercase;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    display: block;
+  }
+  /* Wrapper: button + timeline side by side */
+  #timelineOuter { display: flex; align-items: flex-start; gap: 8px; }
+
+  /* History: past cols in a horizontally scrollable strip */
+  #historyScroll {
+    display: none; /* shown when open */
+    gap: 12px;
+    overflow-x: auto;
+    overflow-y: clip; /* clip prevents sticky breakage unlike overflow-y:auto */
+    scroll-snap-type: x mandatory;
+    padding-bottom: 4px;
+    flex-shrink: 0;
+    max-width: 404px; /* ~1 column visible at a time; change to 808px for 2 */
+  }
+  #historyScroll.open { display: flex; }
+  #historyScroll::-webkit-scrollbar { height: 4px; }
+  #historyScroll::-webkit-scrollbar-track { background: transparent; }
+  #historyScroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+  #historyScroll .col-past {
+    width: 392px; min-width: 392px; max-width: 392px;
+    flex-shrink: 0; flex-grow: 0;
+    scroll-snap-align: start;
+    display: flex !important;
+  }
+  .card-title { font-size: 12px; font-weight: 600; color: #dde1ea; line-height: 1.3; }
+  .card-desc  { font-size: 11px; color: #6b7280; margin-top: 4px; line-height: 1.5; }
+  .card-links { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 7px; padding-top: 7px; border-top: 1px solid rgba(255,255,255,0.05); }
+
+  .lp   { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; font-weight: 500; padding: 2px 7px; border-radius: 4px; text-decoration: none; letter-spacing: 0.2px; transition: all 0.12s; border: 1px solid; }
+  .ln   { color:#a0aec0; border-color:rgba(160,174,192,0.2); background:rgba(160,174,192,0.06); }
+  .ln:hover  { color:#e2e8f0; background:rgba(160,174,192,0.14); border-color:rgba(160,174,192,0.4); }
+  .lprd { color:#7dd3fc; border-color:rgba(125,211,252,0.2); background:rgba(125,211,252,0.06); }
+  .lprd:hover{ color:#bae6fd; background:rgba(125,211,252,0.14); border-color:rgba(125,211,252,0.4); }
+  .ld   { color:#f9a8d4; border-color:rgba(249,168,212,0.2); background:rgba(249,168,212,0.06); }
+  .ld:hover  { color:#fbcfe8; background:rgba(249,168,212,0.14); border-color:rgba(249,168,212,0.4); }
+  .lr   { color:#86efac; border-color:rgba(134,239,172,0.2); background:rgba(134,239,172,0.06); }
+  .lr:hover  { color:#bbf7d0; background:rgba(134,239,172,0.14); border-color:rgba(134,239,172,0.4); }
+  .lpr  { color:#fcd34d; border-color:rgba(252,211,77,0.2); background:rgba(252,211,77,0.06); }
+  .lpr:hover { color:#fde68a; background:rgba(252,211,77,0.14); border-color:rgba(252,211,77,0.4); }
+  .lbr  { color:#fb923c; border-color:rgba(251,146,60,0.2); background:rgba(251,146,60,0.06); }
+  .lbr:hover { color:#fdba74; background:rgba(251,146,60,0.14); border-color:rgba(251,146,60,0.4); }
+
+
+
+  .internal-label {
+    font-size: 8px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
+    color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08); border-radius: 3px;
+    padding: 1px 5px; margin-left: auto;
+  }
+  body.mode-external .internal-label { display: none; }
+
+  /* Internal cards — hidden in External mode */
+  body.mode-external .card[data-internal="true"] { display: none !important; }
+  body.mode-external .sum-chip[data-internal="true"] { display: none !important; }
+
+  /* Hide PRD links for GTM audience */
+  body[data-aud="gtm"] .lprd { display: none !important; }
+  /* External mode — hide internal elements */
+  body.mode-external .status-badge { display: none !important; }
+  body.mode-external .card-links   { display: none !important; }
+  body.mode-external .card-preview-open { display: none !important; }
+  body.mode-external .sum-badge    { display: none !important; }
+
+  /* ── Internal flag ── */
+  .internal-flag {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 8.5px; font-weight: 700; letter-spacing: 0.3px;
+    padding: 2px 6px; border-radius: 4px;
+    background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.25);
+    color: #fbbf24; white-space: nowrap; flex-shrink: 0;
+  }
+  /* Hide in External and Custom mode */
+  body.mode-external .internal-flag { display: none !important; }
+  body.mode-custom   .internal-flag { display: none !important; }
+
+  /* ── Info button & tooltip ── */
+  .info-btn {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.05);
+    color: #6b7280; font-size: 14px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: all 0.15s;
+  }
+  .info-btn:hover { background: rgba(255,255,255,0.1); color: #fff; border-color: rgba(255,255,255,0.25); }
+
+  /* Hide info button in Summary and External modes */
+  body.mode-external .info-btn { display: none !important; }
+
+  .info-tooltip {
+    position: fixed; top: 64px; right: 24px; width: 310px;
+    background: #1b1f2e; border: 1px solid rgba(255,255,255,0.13);
+    border-radius: 12px; padding: 16px 16px 14px;
+    z-index: 9999; box-shadow: 0 24px 64px rgba(0,0,0,0.55);
+    display: none;
+  }
+  .info-tooltip.visible { display: block; }
+  .info-tooltip h3 { font-size: 12px; font-weight: 700; color: #fff; margin-bottom: 12px; letter-spacing: -0.2px; }
+  .info-tooltip h4 { font-size: 9px; font-weight: 700; color: #4b5563; letter-spacing: 0.7px;
+                     text-transform: uppercase; margin: 12px 0 6px; }
+  .tt-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 5px;
+             font-size: 11px; color: #9ca3af; line-height: 1.45; }
+  .tt-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
+  .tt-badge { font-size: 8px; font-weight: 700; padding: 1px 6px; border-radius: 8px;
+              white-space: nowrap; flex-shrink: 0; margin-top: 1px; }
+  .tt-lp { font-family: 'JetBrains Mono', monospace; font-size: 8.5px; font-weight: 500;
+           padding: 1px 5px; border-radius: 3px; border: 1px solid; flex-shrink: 0; margin-top: 1px; }
+  .tt-prog { height: 3px; width: 70px; border-radius: 2px; background: rgba(255,255,255,0.08); overflow: hidden; margin-top: 3px; }
+  .tt-prog-fill { height: 100%; border-radius: 2px; }
+  .tt-close { position: absolute; top: 10px; right: 12px; background: none; border: none;
+              color: #4b5563; cursor: pointer; font-size: 18px; line-height: 1;
+              padding: 2px 5px; border-radius: 4px; transition: all 0.1s; }
+  .tt-close:hover { color: #fff; background: rgba(255,255,255,0.08); }
+
+  /* Hide info button when Summary mode is active (JS toggles audienceToggle, mirror for infoBtn) */
+
+  /* ── Custom mode ──────────────────────────────────────────────────────── */
+  .mode-btn-custom { color: #a78bfa !important; }
+  .mode-btn-custom.active { background: rgba(167,139,250,0.15) !important; color: #a78bfa !important; }
+
+  body.mode-custom .card-desc.desc-gtm,
+  body.mode-custom .card-desc.desc-product { display: none !important; }
+  body.mode-custom .card-desc.desc-client  { display: block !important; }
+  body.mode-custom .status-badge  { display: none !important; }
+  body.mode-custom .card-links    { display: none !important; }
+  body.mode-custom .card-meta     { display: none !important; }
+  body.mode-custom .info-btn      { display: none !important; }
+  body.mode-custom #audienceToggle{ display: none !important; }
+  body.mode-custom .card[data-internal="true"] { display: none !important; }
+  body.mode-custom .card { position: relative; }
+
+  /* Per-card hide toggle button */
+  .card-custom-toggle {
+    position: absolute; top: 8px; right: 8px;
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.06);
+    cursor: pointer; display: none;
+    align-items: center; justify-content: center;
+    font-size: 13px; line-height: 1; color: #6b7280;
+    transition: all 0.15s; z-index: 10; flex-shrink: 0;
+  }
+  body.mode-custom .card-custom-toggle { display: flex; }
+  .card-custom-toggle:hover { background: rgba(239,68,68,0.18); border-color: rgba(239,68,68,0.35); color: #f87171; }
+  .card.custom-hidden .card-custom-toggle { background: rgba(99,102,241,0.12); border-color: rgba(99,102,241,0.3); color: #818cf8; }
+  .card.custom-hidden .card-custom-toggle::before { content: '+'; }
+  .card-custom-toggle::before { content: '×'; }
+  body.mode-custom .card.custom-hidden { opacity: 0.28; filter: grayscale(0.5); pointer-events: none; }
+  body.mode-custom .card.custom-hidden .card-custom-toggle { pointer-events: all; }
+
+  /* Custom toolbar */
+  #customBar {
+    display: none; align-items: center; gap: 10px;
+    background: rgba(167,139,250,0.07); border: 1px solid rgba(167,139,250,0.2);
+    border-radius: 10px; padding: 9px 14px; margin-bottom: 14px; flex-wrap: wrap;
+  }
+  body.mode-custom #customBar { display: flex; }
+  #customBar .cb-label { font-size: 11px; font-weight: 700; color: #a78bfa; letter-spacing: 0.3px; }
+  #customBar .cb-count { font-size: 11px; color: #6b7280; }
+  #customBar .cb-spacer { flex: 1; }
+  #customBar .cb-btn {
+    font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 6px;
+    border: 1px solid; cursor: pointer; transition: all 0.15s;
+  }
+  #customBar .cb-btn-show  { background: rgba(99,102,241,0.1);  border-color: rgba(99,102,241,0.3);  color: #818cf8; }
+  #customBar .cb-btn-show:hover  { background: rgba(99,102,241,0.2); }
+  #customBar .cb-btn-reset { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); color: #6b7280; }
+  #customBar .cb-btn-reset:hover { background: rgba(255,255,255,0.09); color: #9ca3af; }
+  #customBar .cb-btn-dl    { background: rgba(34,197,94,0.1);   border-color: rgba(34,197,94,0.3);   color: #22c55e; }
+  #customBar .cb-btn-dl:hover    { background: rgba(34,197,94,0.2); }
+
+  /* Hidden features panel */
+  #hiddenPanel {
+    display: none; position: fixed; top: 60px; right: 24px; width: 280px;
+    max-height: 70vh; overflow-y: auto;
+    background: #1b1f2e; border: 1px solid rgba(167,139,250,0.25);
+    border-radius: 12px; padding: 14px 14px 10px; z-index: 9998;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.55);
+  }
+  #hiddenPanel.visible { display: block; }
+  #hiddenPanel h3 { font-size: 10px; font-weight: 700; color: #a78bfa;
+                    letter-spacing: 0.6px; text-transform: uppercase; margin-bottom: 10px; }
+  #hpClose { position: absolute; top: 10px; right: 12px; background: none; border: none;
+             color: #4b5563; cursor: pointer; font-size: 18px; padding: 2px 5px;
+             border-radius: 4px; transition: all 0.1s; }
+  #hpClose:hover { color: #fff; background: rgba(255,255,255,0.08); }
+  .hp-empty { font-size: 11px; color: #4b5563; text-align: center; padding: 12px 0; }
+  .hp-item { display: flex; align-items: center; gap: 8px; padding: 6px 4px;
+             border-radius: 6px; cursor: pointer; transition: background 0.1s; }
+  .hp-item:hover { background: rgba(255,255,255,0.05); }
+  .hp-item-name { font-size: 11px; color: #d1d5db; flex: 1; line-height: 1.3; }
+  .hp-item-add { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px;
+                 border: 1px solid rgba(99,102,241,0.3); background: rgba(99,102,241,0.1);
+                 color: #818cf8; white-space: nowrap; flex-shrink: 0; }
+  .hp-item:hover .hp-item-add { background: rgba(99,102,241,0.2); }
+  /* Custom view toggle (Monthly / Quarterly) */
+  .cb-view-toggle {
+    display: flex; background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 2px; gap: 2px;
+  }
+  .cb-view-btn {
+    font-family: 'Sora', sans-serif; font-size: 10px; font-weight: 700;
+    padding: 4px 10px; border-radius: 4px; border: none;
+    background: transparent; color: #6b7280; cursor: pointer; transition: all 0.15s;
+  }
+  .cb-view-btn.active {
+    background: rgba(167,139,250,0.2); color: #a78bfa;
+  }
+  .cb-view-btn:hover:not(.active) { color: #9ca3af; }
+
+  #customBar .cb-btn-dl:hover    { background: rgba(34,197,94,0.2); }
+
+  /* Monthly/Quarterly toggle inside customBar */
+  .cb-view-toggle {
+    display: flex; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px; padding: 2px; gap: 2px;
+  }
+  .cb-view-btn {
+    font-family: 'Sora', sans-serif; font-size: 10px; font-weight: 600;
+    padding: 3px 10px; border-radius: 4px; border: none; cursor: pointer;
+    background: transparent; color: #6b7280; transition: all 0.15s;
+  }
+  .cb-view-btn.active { background: rgba(167,139,250,0.2); color: #a78bfa; }
+  .cb-view-btn:hover:not(.active) { color: #9ca3af; }
+
+  /* Quarterly view grid */
+  #quarterlyView {
+    display: none;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  body.mode-custom #quarterlyView.active { display: grid !important; }
+  body.mode-custom #quarterlyView.active ~ #detailedView { display: none !important; }
+
+  /* Quarter column header accent colors */
+  .q-col-hdr-q1 { background: rgba(34,197,94,0.08)  !important; border-top: 2px solid #22c55e !important; }
+  .q-col-hdr-q2 { background: rgba(99,102,241,0.08) !important; border-top: 2px solid #6366f1 !important; }
+  .q-col-hdr-q3 { background: rgba(245,158,11,0.08) !important; border-top: 2px solid #f59e0b !important; }
+  .q-col-hdr-q4 { background: rgba(107,114,128,0.08)!important; border-top: 2px solid #4b5563 !important; }
+
+  /* Quarterly col-body: same as regular col-body but no horizontal padding mismatch */
+  #quarterlyView .col-body { gap: 7px; }
+
+  .q-col { }
+  .q-col-header {
+    padding: 11px 13px; border-radius: 10px 10px 0 0;
+    background: rgba(167,139,250,0.08); border-top: 2px solid rgba(167,139,250,0.4);
+  }
+  .q-col-header .month { font-size: 11px; font-weight: 700; letter-spacing: 0.6px;
+                          text-transform: uppercase; color: #fff; }
+  .q-col-header .subtitle { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .q-col-body {
+    background: var(--surface); border: 1px solid var(--border); border-top: none;
+    border-radius: 0 0 10px 10px; padding: 8px; display: flex; flex-direction: column; gap: 5px;
+    min-height: 60px;
+  }
+
+  /* Feature chip in quarterly view */
+  .q-chip {
+    display: flex; align-items: center; gap: 7px;
+    padding: 6px 9px; border-radius: 7px;
+    background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+    position: relative; cursor: default;
+    transition: opacity 0.15s;
+  }
+  .q-chip.custom-hidden { opacity: 0.25; filter: grayscale(0.5); }
+  .q-chip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .q-chip-name { font-size: 11px; font-weight: 500; color: #c8cdd8; flex: 1; line-height: 1.3; }
+  .q-chip-badge {
+    font-size: 8px; font-weight: 700; padding: 1px 5px; border-radius: 5px;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .q-chip-toggle {
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.05);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: #6b7280; flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .q-chip-toggle::before { content: '×'; }
+  .q-chip-toggle:hover { background: rgba(239,68,68,0.18); border-color: rgba(239,68,68,0.35); color: #f87171; }
+  .q-chip.custom-hidden .q-chip-toggle::before { content: '+'; }
+  .q-chip.custom-hidden .q-chip-toggle { background: rgba(99,102,241,0.12); border-color: rgba(99,102,241,0.3); color: #818cf8; }
+  .q-chip.custom-hidden .q-chip-toggle:hover { background: rgba(99,102,241,0.22); }
+  .q-count { font-size: 10px; color: #4b5563; text-align: center; padding: 4px 0; }
+
+  .audience-toggle { display: flex; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 8px; padding: 3px; gap: 2px; }
+  .aud-btn { font-family: 'Sora', sans-serif; font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 6px; border: none; background: transparent; color: var(--muted); cursor: pointer; transition: all 0.15s; }
+  .aud-btn[data-aud="gtm"].active     { background: rgba(244,63,94,0.18);  color: #fb7185; }
+  .aud-btn[data-aud="product"].active { background: rgba(139,92,246,0.18); color: #a78bfa; }
+  .aud-btn[data-aud="client"].active  { background: rgba(16,185,129,0.18); color: #34d399; }
+
+  /* Audience description visibility — default hide all */
+  .card-desc.desc-gtm,
+  .card-desc.desc-product,
+  .card-desc.desc-client { display: none; }
+  body[data-aud="gtm"]     .card-desc.desc-gtm     { display: block; }
+  body[data-aud="product"] .card-desc.desc-product  { display: block; }
+  body[data-aud="client"]  .card-desc.desc-client   { display: block; }
+
+  /* External always shows client desc, hides audience toggle */
+  body.mode-external .card-desc.desc-gtm,
+  body.mode-external .card-desc.desc-product { display: none !important; }
+  body.mode-external .card-desc.desc-client  { display: block !important; }
+  body.mode-external #audienceToggle         { display: none !important; }
+
+  /* Download button */
+  .download-btn {
+    font-family: 'Sora', sans-serif; font-size: 11px; font-weight: 600;
+    padding: 6px 13px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.05); color: #9ca3af;
+    cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 6px;
+    white-space: nowrap;
+  }
+  .download-btn:hover { background: rgba(255,255,255,0.1); color: #fff; border-color: rgba(255,255,255,0.25); }
+  .download-btn svg { width: 12px; height: 12px; flex-shrink: 0; }
+
+  /* Print styles */
+  @media print {
+    body { background: #fff !important; color: #111 !important; padding: 16px !important; }
+    :root {
+      --bg: #fff; --surface: #f8f9fa; --border: rgba(0,0,0,0.1);
+      --text: #111; --muted: #666;
+    }
+    .mode-toggle, .controls-row, .download-btn { display: none !important; }
+    .card { break-inside: avoid; }
+    .card:hover { background: rgba(0,0,0,0.02) !important; }
+    .timeline { gap: 8px !important; }
+  }
+
+  .summary-view { display: none; }
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .sum-col-header { padding: 10px 12px; border-radius: 8px 8px 0 0; }
+  .sum-col-header .month   { font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: #fff; }
+  .sum-col-header .subtitle{ font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .sum-col-now .sum-col-header { background: rgba(34,197,94,0.10);  border-top: 2px solid var(--ship); }
+  .sum-col-apr .sum-col-header { background: rgba(34,197,94,0.10);  border-top: 2px solid var(--ship); }
+  .sum-col-may .sum-col-header { background: rgba(99,102,241,0.10); border-top: 2px solid var(--planned); }
+  .sum-col-jun .sum-col-header { background: rgba(245,158,11,0.08); border-top: 2px solid var(--discovery); }
+  .sum-col-q3  .sum-col-header { background: rgba(107,114,128,0.08); border-top: 2px solid #4b5563; }
+  .sum-col-body { background: var(--surface); border: 1px solid var(--border); border-top: none; border-radius: 0 0 8px 8px; padding: 8px; display: flex; flex-direction: column; gap: 4px; }
+  .sum-chip { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--border); background: rgba(255,255,255,0.03); transition: all 0.12s; }
+  .sum-chip:hover { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.13); }
+  .sum-chip.hidden { display: none; }
+  .sum-dot  { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .sum-name { font-size: 11px; font-weight: 500; color: #c8cdd8; flex: 1; line-height: 1.3; }
+  .sum-badge{ font-size: 8px; font-weight: 700; padding: 1px 5px; border-radius: 8px; white-space: nowrap; flex-shrink: 0; }
+
+  .link-legend { display: flex; gap: 7px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+  .link-legend-label { font-size: 11px; color: var(--muted); margin-right: 2px; }
+
+  .mode-external .card-meta { display: none !important; }
+
+  .card-meta { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .card-progress { flex: 1; }
+  .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
+  .progress-stage { font-size: 9px; font-weight: 600; color: var(--muted); letter-spacing: 0.3px; text-transform: uppercase; }
+  .progress-pct   { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--muted); }
+  .progress-track { height: 3px; background: rgba(255,255,255,0.07); border-radius: 2px; overflow: hidden; }
+  .progress-fill  { height: 100%; border-radius: 2px; transition: width 0.4s ease; }
+  .card-date-badge {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 500;
+    color: var(--muted); background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: 2px 7px; white-space: nowrap; flex-shrink: 0;
+  }
+
+  /* Two-date badges */
+  .card-dates { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 6px; }
+  .date-badge {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 500;
+    padding: 2px 7px; border-radius: 4px; white-space: nowrap;
+    border: 1px solid; display: inline-flex; align-items: center; gap: 3px;
+  }
+  .date-disc    { color: #94a3b8; border-color: rgba(148,163,184,0.25); background: rgba(148,163,184,0.07); }
+  .date-deliver { color: #34d399; border-color: rgba(52,211,153,0.25);  background: rgba(52,211,153,0.07); }
+  .date-pilot   { color: #a78bfa; border-color: rgba(167,139,250,0.25); background: rgba(167,139,250,0.07); }
+  .date-rollout { color: #38bdf8; border-color: rgba(56,189,248,0.25);  background: rgba(56,189,248,0.07); }
+
+  /* ── ONE-PAGER MODAL ──────────────────────────────────────────── */
+  #op-modal {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.72); z-index: 9999;
+    align-items: center; justify-content: center;
+  }
+  #op-modal.open { display: flex; }
+  #op-modal-box {
+    background: #fff; border-radius: 14px;
+    width: 88vw; height: 92vh; max-width: 1100px;
+    display: flex; flex-direction: column; overflow: hidden;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.45);
+  }
+  #op-modal-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px; background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0; flex-shrink: 0;
+  }
+  #op-modal-title { font-size: 15px; font-weight: 600; color: #1e293b; }
+  #op-modal-close {
+    background: none; border: none; font-size: 22px; line-height: 1;
+    color: #64748b; cursor: pointer; padding: 4px 8px;
+    border-radius: 6px; transition: background 0.15s;
+  }
+  #op-modal-close:hover { background: #e2e8f0; color: #1e293b; }
+  #op-modal-frame { flex: 1; width: 100%; border: none; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>Digital Finance Team — Product Roadmap 2026</h1>
+    <p>Updated March 2026</p>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+    <div class="audience-toggle" id="audienceToggle">
+      <button class="aud-btn" data-aud="gtm">GTM</button>
+      <button class="aud-btn active" data-aud="product">Product</button>
+      <button class="aud-btn" data-aud="client">Client</button>
+    </div>
+    <div class="mode-toggle">
+      <button class="mode-btn active" data-mode="detailed">Detailed</button>
+      <button class="mode-btn" data-mode="summary">Summary</button>
+      <button class="mode-btn" data-mode="external">External</button>
+      <button class="mode-btn mode-btn-custom" data-mode="custom">Custom</button>
+    </div>
+  <button class="info-btn" id="infoBtn" title="Legend">ⓘ</button>
+    <button class="download-btn" id="screenshotBtn" title="Save as PNG image" style="background:rgba(99,102,241,0.12);border-color:rgba(99,102,241,0.3);color:#818cf8;">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="1" y="3" width="14" height="10" rx="1.5"/>
+        <circle cx="8" cy="8" r="2.5"/>
+        <path d="M5.5 3l1-1.5h3L10.5 3"/>
+      </svg>
+      PNG
+    </button>
+    <button class="download-btn" id="downloadBtn">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8 2v8M5 7l3 3 3-3M2 12v1a1 1 0 001 1h10a1 1 0 001-1v-1"/>
+      </svg>
+      Download
+    </button>
+  </div>
+</div>
+
+
+<div class="controls-row">
+  <div class="filters">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="Platform foundations">Platform</button>
+    <button class="filter-btn" data-filter="Data engine">Data engine</button>
+    <button class="filter-btn" data-filter="Shared context (16 layers)">Context</button>
+    <button class="filter-btn" data-filter="Agents (10 in MVP)">Agents</button>
+    <button class="filter-btn" data-filter="Workflows">Workflows</button>
+    <button class="filter-btn" data-filter="Cabinet — pages">Cabinet</button>
+    <button class="filter-btn" data-filter="Agent settings UI">Agent settings</button>
+    <button class="filter-btn" data-filter="Custom artifacts">Artifacts</button>
+    <button class="filter-btn" data-filter="Slack-first interface">Slack</button>
+    <button class="filter-btn" data-filter="Cross-cutting concerns">Cross-cutting</button>
+    <button class="filter-btn" data-filter="marketing">✦ Marketing</button>
+  </div>
+  <div id="searchWrap">
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M10.5 10.5l3 3"/></svg>
+    <input id="roadmapSearch" type="text" placeholder="Search features…" autocomplete="off" spellcheck="false">
+    <button id="searchClear" title="Clear">×</button>
+  </div>
+</div>
+
+
+<!-- ═══════════  DETAILED VIEW  ═══════════ -->
+<div id="customBar">
+  <span class="cb-label">✦ Custom View</span>
+  <span class="cb-count" id="cbCount"></span>
+  <div class="cb-view-toggle">
+    <button class="cb-view-btn active" id="cbViewMonthly">Monthly</button>
+    <button class="cb-view-btn" id="cbViewQuarterly">Quarterly</button>
+  </div>
+  <span class="cb-spacer"></span>
+  <button class="cb-btn cb-btn-show" id="cbShowHidden">Show hidden</button>
+  <button class="cb-btn cb-btn-reset" id="cbReset">Reset</button>
+  <button class="cb-btn cb-btn-dl" id="cbDownload">
+    <svg style="width:11px;height:11px;display:inline;vertical-align:-1px;margin-right:4px" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M5 7l3 3 3-3M2 12v1a1 1 0 001 1h10a1 1 0 001-1v-1"/></svg>
+    Download selection
+  </button>
+</div>
+
+<div id="hiddenPanel">
+  <button id="hpClose">×</button>
+  <h3>Hidden features</h3>
+  <div id="hpList"></div>
+</div>
+
+<div id="quarterlyView" style="display:none"></div>
+
+<div class="timeline" id="detailedView">
+
+  <div class="col-now">
+    <div class="col-header"><div class="month">March 2026</div><div class="subtitle">Shipping now</div></div>
+    <div class="col-body">
+
+      <div class="card" data-area="Dashboards"
+           data-preview-url="https://claude.ai/public/artifacts/1125fd2a-de10-4043-ad56-7b7b7a4f9d22"
+           data-preview-open="https://claude.ai/public/artifacts/1125fd2a-de10-4043-ad56-7b7b7a4f9d22">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-preview">
+          <img alt="Customize Dashboard Charts preview" />
+          <div class="card-preview-overlay"></div>
+          <a class="card-preview-open" href="https://claude.ai/public/artifacts/1125fd2a-de10-4043-ad56-7b7b7a4f9d22" target="_blank">Open prototype ↗</a>
+        </div>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--dashboards)"></div><span class="area-label" style="color:var(--dashboards)">DASHBOARDS</span><span class="status-badge badge-delivery">In Delivery</span></div>
+          <div class="card-title">Customize Dashboard Charts</div>
+          <div class="card-desc desc-gtm">Every prospect asks &quot;can I customize dashboards?&quot; — now the answer is yes.</div>
+          <div class="card-desc desc-product">Widget config panel: metric selector, date range presets + custom, chart type toggle. Config stored per widget.</div>
+          <div class="card-desc desc-client">Choose what each chart shows, which time period, and how it looks. Your dashboard, your way.</div>
+        <div class="card-meta"><div class="card-progress">
+          <div class="progress-header">
+            <span class="progress-stage">Partially shipped</span>
+            <span class="progress-pct">90%</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:90%;background:#22c55e"></div></div>
+        </div><div class="card-dates"><span class="date-badge date-deliver">🚀 Mar 2026</span></div></div>
+          <div class="card-links">
+            <a class="lp ln" href="https://www.notion.so/fuelfinanceme/Chart-Builder-23b0eaabf1e580c5a288de3620362d32?source=copy_link" target="_blank">Description</a>
+            <a class="lp lprd" href="https://www.notion.so/fuelfinanceme/Chart-builder-PRD-v2-3140eaabf1e58072a64ccdb325234c91?source=copy_link" target="_blank">PRD</a>
+            <a class="lp lpr" href="https://claude.ai/public/artifacts/1125fd2a-de10-4043-ad56-7b7b7a4f9d22" target="_blank">Prototype</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" data-area="AI Copilot" data-internal="true">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--ai)"></div><span class="area-label" style="color:var(--ai)">AI COPILOT</span><span class="status-badge badge-delivery">In Delivery</span></div>
+          <div class="card-title">MCP for Metrics</div>
+          <div class="card-desc desc-gtm">Enables AI agents built on Claude, GPT or any MCP-compatible platform to query Fuel data directly.</div>
+          <div class="card-desc desc-product">MCP server exposing metrics, dimensions and forecast data as typed tools. Auth via API key.</div>
+          <div class="card-desc desc-client">Fuel's financial data is accessible to external AI tools — build custom workflows on top of your real numbers.</div>
+        <div class="card-meta"><div class="card-progress">
+          <div class="progress-header">
+            <span class="progress-stage">Fully shipped</span>
+            <span class="progress-pct">100%</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:100%;background:#22c55e"></div></div>
+        </div><div class="card-dates"><span class="date-badge date-deliver">🚀 Mar 2026</span></div></div>
+          <div class="card-links">
+            <a class="lp ln" href="https://www.notion.so/fuelfinanceme/MCP-for-Fuel-31f0eaabf1e58044bdacc1309fdb2572?source=copy_link" target="_blank">Description</a>
+            <a class="lp lprd" href="https://www.notion.so/fuelfinanceme/MCP-for-metrics_PRD-31f0eaabf1e58025a3dbf50d4055c881?source=copy_link" target="_blank">PRD</a>
+            <a class="lp lr" href="https://www.notion.so/fuelfinanceme/MCP_Market-research-31f0eaabf1e5802199a7d8207fccc820?source=copy_link" target="_blank">Research</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" data-area="AI Copilot">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--ai)"></div><span class="area-label" style="color:var(--ai)">AI COPILOT</span><span class="status-badge badge-delivery">In Delivery</span></div>
+          <div class="card-title">Copilot Remembers Your Conversations</div>
+          <div class="card-desc desc-gtm">No more &quot;as I mentioned before&quot; — Copilot picks up exactly where the user left off.</div>
+          <div class="card-desc desc-product">Session message store with role/content/timestamp/referenced metrics. Context window manager with priority scoring.</div>
+          <div class="card-desc desc-client">Copilot remembers everything you discussed — no need to repeat context or re-explain what you were looking at.</div>
+        <div class="card-meta"><div class="card-progress">
+          <div class="progress-header">
+            <span class="progress-stage">Fully shipped</span>
+            <span class="progress-pct">100%</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:100%;background:#22c55e"></div></div>
+        </div><div class="card-dates"><span class="date-badge date-deliver">🚀 Mar 2026</span></div></div>
+          <div class="card-links">
+            <a class="lp ln" href="https://www.notion.so/fuelfinanceme/Conversation-Context-Memory-31b0eaabf1e5800d8d37dc9261f1bf6b?source=copy_link" target="_blank">Description</a>
+            <a class="lp lprd" href="https://www.notion.so/fuelfinanceme/Conversation-Context-Memory-PRD-31b0eaabf1e580288d4bf28fb0d24f0b?source=copy_link" target="_blank">PRD</a>
+            <a class="lp lr" href="https://www.notion.so/fuelfinanceme/Conversation_Context_Memory_Research_Notion-3220eaabf1e580b58cc3fa86c3361062?source=copy_link" target="_blank">Research</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" data-area="Metrics" data-internal="true">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--metrics)"></div><span class="area-label" style="color:var(--metrics)">METRICS</span><span class="status-badge badge-delivery">In Delivery</span></div>
+          <div class="card-title">Formula Engine</div>
+          <div class="card-desc desc-gtm">Powers every custom calculation in the platform — enables clients to define their own metrics without engineering.</div>
+          <div class="card-desc desc-product">Backend service for evaluating custom metric formulas without manual per-formula coding.</div>
+          <div class="card-desc desc-client">The engine behind all custom calculations in Fuel — ensures every formula is evaluated correctly and consistently.</div>
+        <div class="card-meta"><div class="card-progress">
+          <div class="progress-header">
+            <span class="progress-stage">Fully shipped</span>
+            <span class="progress-pct">100%</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:100%;background:#22c55e"></div></div>
+        </div><div class="card-dates"><span class="date-badge date-deliver">🚀 Mar 2026</span></div></div>
+        </div>
+      </div>
+
+      <div class="card" data-area="Forecast">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--forecast)"></div><span class="area-label" style="color:var(--forecast)">FORECAST</span><span class="status-badge badge-delivery">In Delivery</span></div>
+          <div class="card-title">Forecast Period Management</div>
+          <div class="card-desc desc-gtm">Clients can extend or adjust their forecast horizon without losing existing data.</div>
+          <div class="card-desc desc-product">Allows users to define, adjust, and extend the forecast time horizon in a controlled, non-destructive way.</div>
+          <div class="card-desc desc-client">Extend or adjust your planning horizon at any time — add more months, shift periods — without losing any data.</div>
+        <div class="card-meta"><div class="card-progress">
+          <div class="progress-header">
+            <span class="progress-stage">Fully shipped</span>
+            <span class="progress-pct">100%</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:100%;background:#22c55e"></div></div>
+        </div><div class="card-dates"><span class="date-badge date-deliver">🚀 Mar 2026</span></div></div>
+          <div class="card-links">
+            <a class="lp ln" href="https://www.notion.so/fuelfinanceme/iter-2-forecast-table-2c00eaabf1e5803baa35d0ddd7be7fb3?source=copy_link" target="_blank">Description</a>
+            <a class="lp lprd" href="https://www.notion.so/fuelfinanceme/iter-2-forecast-table-2c00eaabf1e5803baa35d0ddd7be7fb3?source=copy_link" target="_blank">PRD</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" data-area="Forecast">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--forecast)"></div><span class="area-label" style="color:var(--forecast)">FORECAST</span><span class="status-badge badge-delivery">In Delivery</span></div>
+          <div class="card-title">Undo Function</div>
+          <div class="card-desc desc-gtm">Removes the fear of making mistakes in the forecast. Clients edit more freely when they can instantly revert.</div>
+          <div class="card-desc desc-product">Reverts the most recent table action (edit, delete, formula change) without full page reload.</div>
+          <div class="card-desc desc-client">Made a mistake in your forecast? Hit undo — the last change is reverted instantly.</div>
+        <div class="card-meta"><div class="card-progress">
+          <div class="progress-header">
+            <span class="progress-stage">Fully shipped</span>
+            <span class="progress-pct">100%</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:100%;background:#22c55e"></div></div>
+        </div><div class="card-dates"><span class="date-badge date-deliver">🚀 Mar 2026</span></div></div>
+          <div class="card-links">
+            <a class="lp ln" href="https://www.notion.so/fuelfinanceme/iter-2-forecast-table-2c00eaabf1e5803baa35d0ddd7be7fb3?source=copy_link" target="_blank">Description</a>
+            <a class="lp lprd" href="https://www.notion.so/fuelfinanceme/iter-2-forecast-table-2c00eaabf1e5803baa35d0ddd7be7fb3?source=copy_link" target="_blank">PRD</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" data-area="Forecast">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--forecast)"></div><span class="area-label" style="color:var(--forecast)">FORECAST</span><span class="status-badge badge-delivery">In Delivery</span></div>
+          <div class="card-title">Value Hover Tooltip</div>
+          <div class="card-desc desc-gtm">Clients understand why a number is what it is without leaving the grid. Strong transparency signal in demos.</div>
+          <div class="card-desc desc-product">On hover over a monthly cell: shows inputs that produced the value, formula used, and delta vs. prior month.</div>
+          <div class="card-desc desc-client">Hover over any number in the forecast to instantly see why it's that value — what inputs drove it.</div>
+        <div class="card-meta"><div class="card-progress">
+          <div class="progress-header">
+            <span class="progress-stage">Fully shipped</span>
+            <span class="progress-pct">100%</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:100%;background:#22c55e"></div></div>
+        </div><div class="card-dates"><span class="date-badge date-deliver">🚀 Mar 2026</span></div></div>
+        </div>
+      </div>
+
+      <div class="card" data-area="Forecast">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--forecast)"></div><span class="area-label" style="color:var(--forecast)">FORECAST</span><span class="status-badge badge-delivery">In Delivery</span></div>
+          <div class="card-title">Metric Hover Tooltip</div>
+          <div class="card-desc desc-gtm">Makes the forecast self-explanatory — clients understand how each row is calculated without asking the team.</div>
+          <div class="card-desc desc-product">On hover over a metric name: shows a row-level summary of how this metric is forecasted — method, drivers, assumptions.</div>
+          <div class="card-desc desc-client">Hover over any metric name to see how it's calculated — what drives it and what assumptions are behind it.</div>
+        <div class="card-meta"><div class="card-progress">
+          <div class="progress-header">
+            <span class="progress-stage">Fully shipped</span>
+            <span class="progress-pct">100%</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:100%;background:#22c55e"></div></div>
+        </div><div class="card-dates"><span class="date-badge date-deliver">🚀 Mar 2026</span></div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="col-apr">
+    <div class="col-header"><div class="month">April 2026</div><div class="subtitle">Discovery</div></div>
+    <div class="col-body">
+
+      <div class="card" data-area="Forecast">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--forecast)"></div><span class="area-label" style="color:var(--forecast)">FORECAST</span><span class="status-badge badge-delivery">In Delivery</span></div>
+          <div class="card-title">AI Forecast Assistant</div>
+          <div class="card-desc desc-gtm">The #1 objection to FP&amp;A tools is setup time. A client describes what they want and the forecast updates live.</div>
+          <div class="card-desc desc-product">NL intent parsing → structured forecast operations. Covers: what-if scenarios, how-to guidance, add/remove rows, set values.</div>
+          <div class="card-desc desc-client">Tell the forecast what to do in plain English — &quot;what if we add 3 hires in Q3?&quot; — and it shows you instantly.</div>
+        <div class="card-meta"><div class="card-progress">
+          <div class="progress-header">
+            <span class="progress-stage">In development</span>
+            <span class="progress-pct">70%</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:70%;background:#22c55e"></div></div>
+        </div><div class="card-dates"><span class="date-badge date-deliver">🚀 Apr 2026</span></div></div>
+          <div class="card-links">
+            <a class="lp ln" href="https://www.notion.so/fuelfinanceme/Forecasting-agent-MVP-31e0eaabf1e580a0a523c9da13999ac6?source=copy_link" target="_blank">Description</a>
+            <a class="lp lprd" href="https://www.notion.so/fuelfinanceme/Forecasting-agent-MVP-PRD-v1-31b0eaabf1e580d2b8f6c9e5fbb41067?source=copy_link" target="_blank">PRD</a>
+            <a class="lp lr" href="https://www.notion.so/fuelfinanceme/Forecasting-Agent_Research-3220eaabf1e58080aa32e57c9d446aa9?source=copy_link" target="_blank">Research</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" data-area="Forecast">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--forecast)"></div><span class="area-label" style="color:var(--forecast)">FORECAST</span><span class="status-badge badge-ready">Ready to Deliver</span></div>
+          <div class="card-title">Formula Builder</div>
+          <div class="card-desc desc-gtm">Clients can write their own calculation logic — like &quot;COGS = 30% of revenue&quot; — without asking finance.</div>
+          <div class="card-desc desc-product">Formula editor with operators, functions (SUM, IF, MAX, MIN), syntax highlighting and circular reference detection.</div>
+          <div class="card-desc desc-client">Write formulas directly in your forecast — just like Excel, but connected to your real data.</div>
+        <div class="card-meta"><div class="card-progress">
+          <div class="progress-header">
+            <span class="progress-stage">Ready to deliver</span>
+            <span class="progress-pct">50%</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:50%;background:#f59e0b"></div></div>
+        </div><div class="card-dates"><span class="date-badge date-deliver">🚀 Apr 2026</span></div></div>
+          <div class="card-links">
+            <a class="lp ln" href="https://www.notion.so/fuelfinanceme/formula-bar-3120eaabf1e580e9bde0d3eee2ec9620?source=copy_link" target="_blank">Description</a>
+            <a class="lp lprd" href="https://www.notion.so/fuelfinanceme/PRD-Forecasting-Formula-Builder-3120eaabf1e580e9bde0d3eee2ec9620?source=copy_link" target="_blank">PRD</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" data-area="Metrics">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--metrics)"></div><span class="area-label" style="color:var(--metrics)">METRICS</span><span class="status-badge badge-ready">Ready to Deliver</span></div>
+          <div class="card-title">Custom Metrics from Google Sheets</div>
+          <div class="card-desc desc-gtm">Clients can bring in any KPI tracked outside accounting — NPS, pipeline coverage, custom ratios.</div>
+          <div class="card-desc desc-product">Google Sheets OAuth2 connection, standardized template with column mapping UI, metric upload + sync.</div>
+          <div class="card-desc desc-client">Connect Google Sheets, map columns to Fuel fields, sync custom KPIs alongside native metrics.</div>
+        <div class="card-meta"><div class="card-progress">
+          <div class="progress-header">
+            <span class="progress-stage">Ready to deliver</span>
+            <span class="progress-pct">50%</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:50%;background:#f59e0b"></div></div>
+        </div><div class="card-dates"><span class="date-badge date-deliver">🚀 Apr 2026</span></div></div>
+          <div class="card-links">
+            <a class="lp ln" href="https://www.notion.so/fuelfinanceme/Custom-Metrics-from-Google-Sheets-1df0eaabf1e5800f8a56c931ddf4becb?source=copy_link" target="_blank">Description</a>
+            <a class="lp lprd" href="https://www.notion.so/fuelfinanceme/Custom-Metrics-from-Google-Sheets_PRD-3220eaabf1e580d5a0b0c5083497359b?source=copy_link" target="_blank">PRD</a>
+            <a class="lp ld" href="https://www.figma.com/design/UuJyo53J0t2JGsHaFmdzye/Fuel-cabinet?node-id=6934-6&t=aw1er8psTBPH4CBy-4" target="_blank">Design</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" data-area="Forecast">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--forecast)"></div><span class="area-label" style="color:var(--forecast)">FORECAST</span><span class="status-badge badge-ready">Ready to Deliver</span></div>
+          <div class="card-title">Drag to Extend Forecast Values</div>
+          <div class="card-desc desc-gtm">A familiar gesture — drag a cell across months to fill it. Removes friction for first-time forecasters.</div>
+          <div class="card-desc desc-product">Horizontal drag on forecast cells to extend values to future periods. Behavior adapts to the cell's logic type.</div>
+          <div class="card-desc desc-client">Fill your forecast forward by dragging — like in Excel. Drag a number across months and it copies forward.</div>
+        <div class="card-meta"><div class="card-progress">
+          <div class="progress-header">
+            <span class="progress-stage">Ready to deliver</span>
+            <span class="progress-pct">50%</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:50%;background:#f59e0b"></div></div>
+        </div><div class="card-dates"><span class="date-badge date-deliver">🚀 Apr 2026</span></div></div>
+          <div class="card-links">
+            <a class="lp ln" href="https://www.notion.so/fuelfinanceme/Drag-to-Extend-Values-3250eaabf1e580d9871cdac18f570330?source=copy_link" target="_blank">Description</a>
+            <a class="lp lprd" href="https://www.notion.so/fuelfinanceme/Manual-Cell-Fill-Forward-Fill-Drag-_PRD-3290eaabf1e581efa0fde57f54a972fb?source=copy_link" target="_blank">PRD</a>
+            <a class="lp lpr" href="https://claude.ai/public/artifacts/332466dc-14fa-4674-9a91-9e19aeefd282" target="_blank">Prototype</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" data-area="Reports" data-internal="true">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--reports)"></div><span class="area-label" style="color:var(--reports)">REPORTS</span><span class="status-badge badge-discovery">Discovery</span></div>
+          <div class="card-title">Reports Page Design</div>
+          <div class="card-desc desc-gtm">Updated reports interface that makes financial data easier to navigate and act on.</div>
+          <div class="card-desc desc-product">Redesigned reports page layout: improved navigation, better data hierarchy, faster filtering, cleaner visual structure.</div>
+          <div class="card-desc desc-client">A cleaner, faster reports experience — everything you need is easier to find and use.</div>
+        <div class="card-meta"><div class="card-progress">
+          <div class="progress-header">
+            <span class="progress-stage">Research</span>
+            <span class="progress-pct">15%</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:15%;background:#6366f1"></div></div>
+        </div><div class="card-dates"><span class="date-badge date-disc">🔍 Mar 2026</span><span class="date-badge date-deliver">🚀 Apr 2026</span></div></div>
+          <div class="card-links">
+            <a class="lp ln" href="https://www.notion.so/fuelfinanceme/Report-Design-v2-3230eaabf1e58034a25ac4773c7aa7db?source=copy_link" target="_blank">Description</a>
+            <a class="lp lprd" href="https://www.notion.so/fuelfinanceme/Report-Space-Design_PRD-3260eaabf1e5805b8a19fdac69e0f6e9?source=copy_link" target="_blank">PRD</a>
+            <a class="lp lr" href="https://www.notion.so/fuelfinanceme/Report-Space-Design_Market-research-3260eaabf1e5801bb20af36ebb4910b2?source=copy_link" target="_blank">Research</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" data-area="Dashboards">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--dashboards)"></div><span class="area-label" style="color:var(--dashboards)">DASHBOARDS</span><span class="status-badge badge-discovery">Discovery</span></div>
+          <div class="card-title">Build Custom Reports</div>
+          <div class="card-desc desc-gtm">Every CFO has a specific monthly report they send to the CEO or board. Build it once, reuse every month.</div>
+          <div class="card-desc desc-product">Report builder: metric selector, date range config, filter builder, display options, save as template.</div>
+          <div class="card-desc desc-client">Build the exact report you need — pick your metrics, set the time period, add filters — then save as a template.</div>
+        <div class="card-meta"><div class="card-progress">
+          <div class="progress-header">
+            <span class="progress-stage">Preparing PRD</span>
+            <span class="progress-pct">30%</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:30%;background:#8b5cf6"></div></div>
+        </div><div class="card-dates"><span class="date-badge date-disc">🔍 Apr 2026</span><span class="date-badge date-deliver">🚀 Apr 2026</span></div></div>
+          <div class="card-links">
+            <a class="lp ln" href="#" onclick="openOnePager('one-pagers/report-builder.pdf', 'Build Custom Reports'); return false;">One-pager</a>
+            <a class="lp lprd" href="https://www.notion.so/fuelfinanceme/Report-Builder_PRD-3270eaabf1e58004a526cd427c4d7e19?source=copy_link" target="_blank">PRD</a>
+            <a class="lp lr" href="https://www.notion.so/fuelfinanceme/Report-builder_market-research-3280eaabf1e580c9a94ae8442eda3498?source=copy_link" target="_blank">Research</a>
+            <a class="lp lpr" href="https://claude.ai/artifacts/3d84cd4b-f296-4845-a2e5-1444465c21d0" target="_blank">Prototype</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="col-may">
+    <div class="col-header"><div class="month">May 2026</div><div class="subtitle">Discovery</div></div>
+    <div class="col-body">
+
+      <div class="card" data-area="AI Copilot">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--ai)"></div><span class="area-label" style="color:var(--ai)">AI COPILOT</span><span class="status-badge badge-ready">Ready to Deliver</span></div>
+          <div class="card-title">MCP Server for Fuel</div>
+          <div class="card-desc desc-gtm">Enables any MCP-compatible AI platform to read and interact with Fuel data — new distribution channel for technical buyers.</div>
+          <div class="card-desc desc-product">Full MCP server implementation: typed tools for metrics, reports, forecast data. Auth via API key. Supports tool discovery.</div>
+          <div class="card-desc desc-client">Fuel's data is accessible to any AI tool your team uses — connect it once and query your financials from anywhere.</div>
+        <div class="card-meta"><div class="card-progress">
+          <div class="progress-header">
+            <span class="progress-stage">Ready to deliver</span>
+            <span class="progress-pct">50%</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:50%;background:#f59e0b"></div></div>
+        </div><div class="card-dates"><span class="date-badge date-deliver">🚀 May 2026</span></div></div>
+          <div class="card-links">
+            <a class="lp ln" href="https://www.notion.so/fuelfinanceme/MCP-for-Fuel-31f0eaabf1e58044bdacc1309fdb2572?source=copy_link" target="_blank">Description</a>
+            <a class="lp lprd" href="https://www.notion.so/fuelfinanceme/MCP-for-metrics_PRD-31f0eaabf1e58025a3dbf50d4055c881?source=copy_link" target="_blank">PRD</a>
+            <a class="lp lr" href="https://www.notion.so/fuelfinanceme/MCP_Market-research-31f0eaabf1e5802199a7d8207fccc820?source=copy_link" target="_blank">Research</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" data-area="AI Copilot">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--ai)"></div><span class="area-label" style="color:var(--ai)">AI COPILOT</span><span class="status-badge badge-ready">Ready to Deliver</span></div>
+          <div class="card-title">Context Awareness</div>
+          <div class="card-desc desc-gtm">Copilot answers become dramatically more relevant when it knows the company — business model, challenges, stage, goals.</div>
+          <div class="card-desc desc-product">Structured context layer: company profile + user profile (role, priorities). Persisted across sessions. Injected into every request.</div>
+          <div class="card-desc desc-client">Copilot understands your business — your model, your goals, your current challenges — for relevant, specific answers.</div>
+        <div class="card-meta"><div class="card-progress">
+          <div class="progress-header">
+            <span class="progress-stage">Ready to deliver</span>
+            <span class="progress-pct">50%</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:50%;background:#f59e0b"></div></div>
+        </div><div class="card-dates"><span class="date-badge date-deliver">🚀 May 2026</span></div></div>
+          <div class="card-links">
+            <a class="lp ln" href="https://www.notion.so/fuelfinanceme/Company-Context-Capture-3270eaabf1e5801d968fc44bf23bc89c?source=copy_link" target="_blank">Description</a>
+            <a class="lp lprd" href="https://www.notion.so/fuelfinanceme/Company-Context-Capture_PRD-3280eaabf1e581a985f1e7200c95b9e8?source=copy_link" target="_blank">PRD</a>
+            <a class="lp lr" href="https://www.notion.so/fuelfinanceme/Company-context-capture_Market-research-3280eaabf1e58082ab15fae9a295f767?source=copy_link" target="_blank">Research</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" data-area="Forecast">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--forecast)"></div><span class="area-label" style="color:var(--forecast)">FORECAST</span><span class="status-badge badge-discovery">Discovery</span></div>
+          <div class="card-title">Forecast Sidebar</div>
+          <div class="card-desc desc-gtm">Turns a complex grid into a conversation. Show a CFO typing a question and watching the model update — closes deals.</div>
+          <div class="card-desc desc-product">Split view: forecast grid left, sidebar right. Forecast management moves to sidebar — see impact of changes immediately.</div>
+          <div class="card-desc desc-client">Click any number to open a sidebar — change values, see their instant impact on the full forecast, or ask questions.</div>
+        <div class="card-meta"><div class="card-progress">
+          <div class="progress-header">
+            <span class="progress-stage">In design</span>
+            <span class="progress-pct">45%</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:45%;background:#f59e0b"></div></div>
+        </div><div class="card-dates"><span class="date-badge date-disc">🔍 Mar 2026</span><span class="date-badge date-deliver">🚀 May 2026</span></div></div>
+        </div>
+      </div>
+
+      <div class="card" data-area="Reports"
+           data-preview-url="https://claude.ai/share/fbd8ca8c-42b1-49b5-84a3-55ee8722050a"
+           data-preview-open="https://claude.ai/share/fbd8ca8c-42b1-49b5-84a3-55ee8722050a">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-preview">
+          <img alt="Compare Metrics Over Time (MoM, YoY, YTD) preview" />
+          <div class="card-preview-overlay"></div>
+          <a class="card-preview-open" href="https://claude.ai/share/fbd8ca8c-42b1-49b5-84a3-55ee8722050a" target="_blank">Open prototype ↗</a>
+        </div>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--reports)"></div><span class="area-label" style="color:var(--reports)">REPORTS</span><span class="status-badge badge-discovery">Discovery</span></div>
+          <div class="card-title">Compare Metrics Over Time (MoM, YoY, YTD)</div>
+          <div class="card-desc desc-gtm">One of the most common requests: &quot;I want to see how this month compares to last year.&quot; Now it's one click.</div>
+          <div class="card-desc desc-product">Period comparison toggles: MoM, QoQ, YoY, YTD, Custom. Shows current value, prior period value, variance in $ and %.</div>
+          <div class="card-desc desc-client">Compare any number against last month, last quarter, or last year — with the difference shown right next to the current value.</div>
+        <div class="card-meta"><div class="card-progress">
+          <div class="progress-header">
+            <span class="progress-stage">In design</span>
+            <span class="progress-pct">45%</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:45%;background:#f59e0b"></div></div>
+        </div><div class="card-dates"><span class="date-badge date-disc">🔍 Mar 2026</span><span class="date-badge date-deliver">🚀 May 2026</span></div></div>
+          <div class="card-links">
+            <a class="lp ln" href="https://www.notion.so/fuelfinanceme/Time-Period-Analytics-3200eaabf1e5801b8503d73108f6a879?source=copy_link" target="_blank">Description</a>
+            <a class="lp lprd" href="https://www.notion.so/fuelfinanceme/Time-Period-Analytics_PRD-v1-3200eaabf1e580499dabdd6e04e31c66?source=copy_link" target="_blank">PRD</a>
+            <a class="lp lr" href="https://www.notion.so/fuelfinanceme/Time-Period-Analytics_Research-3200eaabf1e5803cb5a1f0dea1dfadb4?source=copy_link" target="_blank">Research</a>
+            <a class="lp lpr" href="https://stunning-licorice-2e4d98.netlify.app/" target="_blank">Prototype</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" data-area="UI/UX">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--forecast)"></div><span class="area-label" style="color:var(--forecast)">UI/UX</span><span class="status-badge badge-discovery">Discovery</span></div>
+          <div class="card-title">Company Selector</div>
+          <div class="card-desc desc-gtm">Multi-entity switching without leaving the current page. Critical for CFOs managing multiple companies or subsidiaries.</div>
+          <div class="card-desc desc-product">Fast entity switcher: keyboard shortcut, recent entities list, search. Context preserved on switch.</div>
+          <div class="card-desc desc-client">Jump between companies or entities instantly — no full page reload, no lost context. One keyboard shortcut away.</div>
+        <div class="card-meta"><div class="card-progress">
+          <div class="progress-header">
+            <span class="progress-stage">In design</span>
+            <span class="progress-pct">45%</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:45%;background:#f59e0b"></div></div>
+        </div><div class="card-dates"><span class="date-badge date-disc">🔍 Mar 2026</span><span class="date-badge date-deliver">🚀 May 2026</span></div></div>
+          <div class="card-links">
+            <a class="lp ln" href="https://www.notion.so/fuelfinanceme/Company-selector-30a0eaabf1e58022879ffcc7b5d5af8d?source=copy_link" target="_blank">Description</a>
+            <a class="lp lprd" href="https://www.notion.so/fuelfinanceme/Company-selector-30a0eaabf1e58022879ffcc7b5d5af8d?source=copy_link" target="_blank">PRD</a>
+            <a class="lp lpr" href="https://company-selector.netlify.app/" target="_blank">Prototype</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" data-area="Metrics">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--metrics)"></div><span class="area-label" style="color:var(--metrics)">METRICS</span><span class="status-badge badge-discovery">Discovery</span></div>
+          <div class="card-title">Build Your Own Financial Metrics</div>
+          <div class="card-desc desc-gtm">Every company tracks something custom. Removes the &quot;but we measure it differently&quot; objection.</div>
+          <div class="card-desc desc-product">Formula builder for derived metrics: operators + functions over existing metric registry. Sharing: private / team / org.</div>
+          <div class="card-desc desc-client">Create metrics that match how your business thinks — like &quot;Adjusted EBITDA&quot; or &quot;Revenue per Employee&quot;.</div>
+        <div class="card-meta"><div class="card-progress">
+          <div class="progress-header">
+            <span class="progress-stage">Research</span>
+            <span class="progress-pct">15%</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:15%;background:#6366f1"></div></div>
+        </div><div class="card-dates"><span class="date-badge date-disc">🔍 Mar 2026</span><span class="date-badge date-deliver">🚀 May 2026</span></div></div>
+          <div class="card-links">
+            <a class="lp ln" href="https://www.notion.so/fuelfinanceme/Metric-Formula-Builder-in-Copilot-3250eaabf1e5801f9a3bdcc8cee67442?source=copy_link" target="_blank">Description</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" data-area="Onboarding">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--forecast)"></div><span class="area-label" style="color:var(--forecast)">ONBOARDING</span><span class="status-badge badge-discovery">Discovery</span></div>
+          <div class="card-title">Page Tutorials</div>
+          <div class="card-desc desc-gtm">Reduces onboarding time and support burden. New users understand Fuel faster — improves activation rates.</div>
+          <div class="card-desc desc-product">Contextual in-app tutorials triggered by page type and user activity. Step-by-step guided flows with skip/resume.</div>
+          <div class="card-desc desc-client">Short guided tours that show you exactly how to use each part of Fuel — available any time, skippable, resumable.</div>
+        <div class="card-meta"><div class="card-progress">
+          <div class="progress-header">
+            <span class="progress-stage">Research</span>
+            <span class="progress-pct">15%</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:15%;background:#6366f1"></div></div>
+        </div><div class="card-dates"><span class="date-badge date-disc">🔍 Apr 2026</span><span class="date-badge date-deliver">🚀 May 2026</span></div></div>
+          <div class="card-links">
+            <a class="lp ln" href="https://www.notion.so/fuelfinanceme/Interactive-Tutorials-per-Page-3250eaabf1e580c79d2ae45ea9ac2024?source=copy_link" target="_blank">Description</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" data-area="Forecast">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--forecast)"></div><span class="area-label" style="color:var(--forecast)">FORECAST</span><span class="status-badge badge-planned">Planned</span></div>
+          <div class="card-title">Hiring Plan &amp; Payroll Forecast</div>
+          <div class="card-desc desc-gtm">People costs are 60–70% of expenses for our ICP. This is the #1 forecast feature prospects ask about.</div>
+          <div class="card-desc desc-product">Structured headcount table: role × dept × start date × salary × benefits %. Engine computes fully-loaded monthly cost.</div>
+          <div class="card-desc desc-client">Add each planned hire with role, salary and start date — Fuel calculates the full cost including benefits automatically.</div>
+        <div class="card-meta"><div class="card-dates"><span class="date-badge date-deliver">🚀 May 2026</span></div></div>
+        </div>
+      </div>
+
+      <div class="card" data-area="Forecast">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--forecast)"></div><span class="area-label" style="color:var(--forecast)">FORECAST</span><span class="status-badge badge-planned">Planned</span></div>
+          <div class="card-title">Rolling Forecast</div>
+          <div class="card-desc desc-gtm">Prospects are tired of forecasts that go stale. This one updates itself — actuals lock in, future periods adjust.</div>
+          <div class="card-desc desc-product">On actuals import: lock closed periods, compute variance, re-project open periods using latest assumptions.</div>
+          <div class="card-desc desc-client">Your forecast stays current automatically — when real numbers come in they lock in, and the rest adjusts forward.</div>
+        <div class="card-meta"><div class="card-dates"><span class="date-badge date-deliver">🚀 May 2026</span></div></div>
+        </div>
+      </div>
+
+      <div class="card" data-area="Reports">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--reports)"></div><span class="area-label" style="color:var(--reports)">REPORTS</span><span class="status-badge badge-planned">Planned</span></div>
+          <div class="card-title">Filter Reports by Legal Entity</div>
+          <div class="card-desc desc-gtm">Multi-entity is a hard requirement for our ICP. Unlocks deals with companies that have subsidiaries.</div>
+          <div class="card-desc desc-product">Entity dimension on all financial reports. Consolidated view applies intercompany elimination rules.</div>
+          <div class="card-desc desc-client">If you have multiple entities, switch between them in one click — see each separately or consolidated together.</div>
+        <div class="card-meta"><div class="card-dates"><span class="date-badge date-deliver">🚀 May 2026</span></div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="col-q3">
+    <div class="col-header"><div class="month">June 2026 +</div><div class="subtitle">Backlog · subject to change</div></div>
+    <div class="col-body">
+
+      <div class="card" data-area="Forecast">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--forecast)"></div><span class="area-label" style="color:var(--forecast)">FORECAST</span><span class="status-badge badge-planned">Planned</span></div>
+          <div class="card-title">Department Budget Planning</div>
+          <div class="card-desc desc-gtm">CFOs at $10M+ companies need to involve department heads in budgeting without giving everyone full access.</div>
+          <div class="card-desc desc-product">Role-scoped forecast workspace: section assignment per user/role, completion status tracker, approval workflow.</div>
+          <div class="card-desc desc-client">Each team lead fills in only their own budget. Finance sees everything consolidated.</div>
+        <div class="card-meta"><div class="card-dates"><span class="date-badge date-deliver">🚀 Jun 2026</span></div></div>
+        </div>
+      </div>
+
+      <div class="card" data-area="AI Copilot">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--ai)"></div><span class="area-label" style="color:var(--ai)">AI COPILOT</span><span class="status-badge badge-planned">Planned</span></div>
+          <div class="card-title">Financial Thinking Mode</div>
+          <div class="card-desc desc-gtm">Finance leaders need to trust AI output. Shows exactly how every number was derived — kills the &quot;black box&quot; objection.</div>
+          <div class="card-desc desc-product">Extended reasoning panel: calculation breakdown, source traceability, assumptions log, methodology note.</div>
+          <div class="card-desc desc-client">See exactly how Copilot arrived at any answer — which data it used, what formula it applied. Full transparency.</div>
+        <div class="card-meta"><div class="card-dates"><span class="date-badge date-deliver">🚀 Jun 2026</span></div></div>
+        </div>
+      </div>
+
+      <div class="card" data-area="Forecast">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--forecast)"></div><span class="area-label" style="color:var(--forecast)">FORECAST</span><span class="status-badge badge-planned">Planned</span></div>
+          <div class="card-title">AI Summary in Forecast</div>
+          <div class="card-desc desc-gtm">CFOs spend hours writing board commentary. This drafts it in seconds. One of the highest-wow features in demos.</div>
+          <div class="card-desc desc-product">AI-generated narrative: key assumptions, growth trajectory, cost drivers, risks. 2–3 paragraphs, labeled as AI-generated.</div>
+          <div class="card-desc desc-client">Get a plain-English summary of your forecast — key growth assumptions, biggest cost drivers, cash runway — in seconds.</div>
+        <div class="card-meta"><div class="card-dates"><span class="date-badge date-deliver">🚀 Jun 2026</span></div></div>
+        </div>
+      </div>
+
+      <div class="card" data-area="Forecast">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--forecast)"></div><span class="area-label" style="color:var(--forecast)">FORECAST</span><span class="status-badge badge-planned">Planned</span></div>
+          <div class="card-title">Editing Forecast with AI Agent</div>
+          <div class="card-desc desc-gtm">Removes the manual editing bottleneck — clients can make complex forecast changes just by describing them.</div>
+          <div class="card-desc desc-product">AI agent interprets natural language edit commands and applies structured changes to the forecast model: adjust values, add rows, apply assumptions across periods.</div>
+          <div class="card-desc desc-client">Just tell the AI what to change in your forecast — &quot;increase marketing spend by 15% from Q2&quot; — and it updates the numbers for you.</div>
+        <div class="card-meta"><div class="card-dates"><span class="date-badge date-deliver">🚀 Jun 2026</span></div></div>
+        </div>
+      </div>
+
+      <div class="card" data-area="Forecast">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--forecast)"></div><span class="area-label" style="color:var(--forecast)">FORECAST</span><span class="status-badge badge-planned">Planned</span></div>
+          <div class="card-title">AI-Guided Forecast Setup</div>
+          <div class="card-desc desc-gtm">Eliminates the blank-page problem. A new client answers 5 questions and gets a working forecast.</div>
+          <div class="card-desc desc-product">Conversational setup: business model → revenue drivers → cost structure → growth stage → headcount. AI maps to template.</div>
+          <div class="card-desc desc-client">Answer a few questions about your business and the AI builds your starting forecast — the right structure, ready to fill in.</div>
+        <div class="card-meta"><div class="card-dates"><span class="date-badge date-deliver">🚀 Jun 2026</span></div></div>
+        </div>
+      </div>
+
+      <div class="card" data-area="AI Copilot">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--ai)"></div><span class="area-label" style="color:var(--ai)">AI COPILOT</span><span class="status-badge badge-planned">Planned</span></div>
+          <div class="card-title">Page Context Capture</div>
+          <div class="card-desc desc-gtm">Makes every Copilot answer feel like it was written for exactly what the user is looking at.</div>
+          <div class="card-desc desc-product">Detects current page type, active entity, report, and period. Captures all visible metric IDs and values. Injected into Copilot context.</div>
+          <div class="card-desc desc-client">Copilot reads what's on your screen — the exact metrics, the date range, the entity — and uses those numbers in its answers.</div>
+        <div class="card-meta"><div class="card-dates"><span class="date-badge date-deliver">🚀 Jun 2026</span></div></div>
+        </div>
+      </div>
+
+      <div class="card" data-area="Forecast">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--forecast)"></div><span class="area-label" style="color:var(--forecast)">FORECAST</span><span class="status-badge badge-planned">Planned</span></div>
+          <div class="card-title">Weekly Cash Flow Planning</div>
+          <div class="card-desc desc-gtm">Cash gaps are a real pain for our ICP. Weekly visibility is a strong hook for companies with uneven payment cycles.</div>
+          <div class="card-desc desc-product">Weekly period grid (ISO weeks), opening/closing balance, actuals auto-population from bank feeds, rolling horizon.</div>
+          <div class="card-desc desc-client">Track cash week by week. Bank transactions fill in automatically — so you always know your real cash position.</div>
+        <div class="card-meta"><div class="card-dates"><span class="date-badge date-deliver">🚀 Jul 2026</span></div></div>
+        </div>
+      </div>
+
+      <div class="card" data-area="AI Copilot">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--ai)"></div><span class="area-label" style="color:var(--ai)">AI COPILOT</span><span class="status-badge badge-planned">Planned</span></div>
+          <div class="card-title">AI Insights on Every Metric and Chart</div>
+          <div class="card-desc desc-gtm">Turns passive dashboards into active alerts. Clients don't have to hunt for problems — Fuel surfaces them.</div>
+          <div class="card-desc desc-product">Post-sync background job: per-metric analysis (MoM trend, YoY, forecast deviation, anomalies). Badge rendered on widget.</div>
+          <div class="card-desc desc-client">When something unusual happens in your numbers — a spike, a drop — a small badge appears. Click to see what happened.</div>
+        <div class="card-meta"><div class="card-dates"><span class="date-badge date-deliver">🚀 Jul 2026</span></div></div>
+        </div>
+      </div>
+
+      <div class="card" data-area="AI Copilot">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--ai)"></div><span class="area-label" style="color:var(--ai)">AI COPILOT</span><span class="status-badge badge-planned">Planned</span></div>
+          <div class="card-title">AI Explains Anything in Fuel</div>
+          <div class="card-desc desc-gtm">Reduces support burden and increases confidence for non-finance users.</div>
+          <div class="card-desc desc-product">Knowledge base: finance concepts by category + difficulty. User proficiency tracking. In-context retrieval for Copilot.</div>
+          <div class="card-desc desc-client">Not sure what a metric means or how a report works? Just ask Copilot — it explains anything in plain English.</div>
+        <div class="card-meta"><div class="card-dates"><span class="date-badge date-deliver">🚀 Jun 2026</span></div></div>
+        </div>
+      </div>
+
+      <div class="card" data-area="Dashboards">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--dashboards)"></div><span class="area-label" style="color:var(--dashboards)">DASHBOARDS</span><span class="status-badge badge-planned">Planned</span></div>
+          <div class="card-title">Customer Retention Analysis (Cohorts)</div>
+          <div class="card-desc desc-gtm">Subscription and recurring revenue businesses need this to understand churn.</div>
+          <div class="card-desc desc-product">Cohort matrix: rows = cohorts by signup month, columns = months since start. Heatmap overlay. Filters: segment, entity.</div>
+          <div class="card-desc desc-client">See how well you keep customers over time, grouped by when they started. Spot which groups stay longest.</div>
+        <div class="card-meta"><div class="card-dates"><span class="date-badge date-deliver">🚀 Jul 2026</span></div></div>
+        </div>
+      </div>
+
+      <div class="card" data-area="Demo" data-internal="true">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--forecast)"></div><span class="area-label" style="color:var(--forecast)">DEMO</span><span class="status-badge badge-planned">Planned</span></div>
+          <div class="card-title">Single Demo Account</div>
+          <div class="card-desc desc-gtm">Internal tool for sales demos — consistent demo environment for the team.</div>
+          <div class="card-desc desc-product">Shared demo company with pre-populated data, reset functionality, and role-based demo scenarios.</div>
+          <div class="card-desc desc-client">A dedicated demo environment for showing Fuel to prospects.</div>
+        <div class="card-meta"><div class="card-dates"><span class="date-badge date-deliver">🚀 Jul 2026</span></div></div>
+        </div>
+      </div>
+
+      <div class="card" data-area="Integrations">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--integrations)"></div><span class="area-label" style="color:var(--integrations)">INTEGRATIONS</span><span class="status-badge badge-planned">Planned</span></div>
+          <div class="card-title">Sage Integration</div>
+          <div class="card-desc desc-gtm">Opens the door to companies on Sage who currently can't use Fuel.</div>
+          <div class="card-desc desc-product">Supports Sage 50, Sage Intacct, Business Cloud (OAuth2). Syncs GL, AP, AR.</div>
+          <div class="card-desc desc-client">If your company uses Sage for accounting, Fuel connects directly — your financial data syncs automatically.</div>
+        <div class="card-meta"><div class="card-dates"><span class="date-badge date-deliver">🚀 Jul 2026</span></div></div>
+        </div>
+      </div>
+
+      <div class="card" data-area="Integrations">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--integrations)"></div><span class="area-label" style="color:var(--integrations)">INTEGRATIONS</span><span class="status-badge badge-planned">Planned</span></div>
+          <div class="card-title">HubSpot Integration</div>
+          <div class="card-desc desc-gtm">Pipeline data from CRM + financials in Fuel = full revenue picture. Unlocks deals with sales-led companies.</div>
+          <div class="card-desc desc-product">OAuth2, configurable object sync (Deals, Contacts, Companies), property mapping UI, daily sync.</div>
+          <div class="card-desc desc-client">Connect your HubSpot CRM to Fuel — your sales pipeline flows in automatically alongside your financials.</div>
+        <div class="card-meta"><div class="card-dates"><span class="date-badge date-deliver">🚀 Jul 2026</span></div></div>
+        </div>
+      </div>
+
+      <div class="card" data-area="AI Copilot">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--ai)"></div><span class="area-label" style="color:var(--ai)">AI COPILOT</span><span class="status-badge badge-planned">Planned</span></div>
+          <div class="card-title">AI Data Quality Checker</div>
+          <div class="card-desc desc-gtm">Finance teams spend hours fixing bad data. This catches issues automatically.</div>
+          <div class="card-desc desc-product">Rules engine: required fields, anomaly detection (z-score + ML), issue queue with severity levels, auto-fix suggestions.</div>
+          <div class="card-desc desc-client">Fuel automatically checks your data for problems — missing categories, unusual amounts, duplicates.</div>
+        </div>
+      </div>
+
+      <div class="card" data-area="AI Copilot">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--ai)"></div><span class="area-label" style="color:var(--ai)">AI COPILOT</span><span class="status-badge badge-planned">Planned</span></div>
+          <div class="card-title">AI Bank &amp; Accounting Reconciliation</div>
+          <div class="card-desc desc-gtm">Reconciliation is one of the most painful manual tasks for our ICP.</div>
+          <div class="card-desc desc-product">Two-pass matching: exact then fuzzy (±$0.50, ±3 days). Match review UI with confidence scores.</div>
+          <div class="card-desc desc-client">Fuel automatically matches your bank transactions against your accounting records and flags discrepancies.</div>
+        </div>
+      </div>
+
+      <div class="card" data-area="Forecast">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--forecast)"></div><span class="area-label" style="color:var(--forecast)">FORECAST</span><span class="status-badge badge-planned">Planned</span></div>
+          <div class="card-title">Sensitivity Analysis</div>
+          <div class="card-desc desc-gtm">Board meetings always involve &quot;what if revenue is 20% lower?&quot; — now CFOs answer that in seconds.</div>
+          <div class="card-desc desc-product">Variable selection (1–5), range definition (low/base/high), tornado chart showing impact rank on selected output.</div>
+          <div class="card-desc desc-client">Test how sensitive your forecast is to key assumptions — change revenue growth and instantly see the impact.</div>
+        </div>
+      </div>
+
+      <div class="card" data-area="Forecast">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--forecast)"></div><span class="area-label" style="color:var(--forecast)">FORECAST</span><span class="status-badge badge-planned">Planned</span></div>
+          <div class="card-title">Smart Alerts</div>
+          <div class="card-desc desc-gtm">Keeps Fuel top-of-mind between logins. Clients get notified when something needs attention.</div>
+          <div class="card-desc desc-product">Alert rule builder: metric + condition + threshold + notification targets. Email + Slack delivery.</div>
+          <div class="card-desc desc-client">Set thresholds that matter — &quot;alert me if cash runway drops below 3 months&quot; — and Fuel notifies you automatically.</div>
+        </div>
+      </div>
+
+      <div class="card" data-area="Integrations">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--integrations)"></div><span class="area-label" style="color:var(--integrations)">INTEGRATIONS</span><span class="status-badge badge-planned">Planned</span></div>
+          <div class="card-title">NetSuite · Xero · Salesforce</div>
+          <div class="card-desc desc-gtm">Unlocks the segment of our ICP that has outgrown QuickBooks.</div>
+          <div class="card-desc desc-product">NetSuite: subsidiary sync. Xero: OAuth2 multi-tenant. Salesforce: OAuth2, configurable object + field sync.</div>
+          <div class="card-desc desc-client">If your company uses NetSuite, Xero, or Salesforce, Fuel connects directly — your data syncs automatically.</div>
+        </div>
+      </div>
+
+      <div class="card" data-area="Dashboards">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--dashboards)"></div><span class="area-label" style="color:var(--dashboards)">DASHBOARDS</span><span class="status-badge badge-planned">Planned</span></div>
+          <div class="card-title">Dashboard Builder</div>
+          <div class="card-desc desc-gtm">Custom dashboards close deals with CEOs who want a specific view.</div>
+          <div class="card-desc desc-product">Widget library: KPI cards, line/bar/pie charts, data tables, text blocks. 12-column grid. Per-role sharing.</div>
+          <div class="card-desc desc-client">Build exactly the dashboard you need — drag and drop charts, KPI cards and tables, arrange them how you like.</div>
+        </div>
+      </div>
+
+      <div class="card" data-area="Reports">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--reports)"></div><span class="area-label" style="color:var(--reports)">REPORTS</span><span class="status-badge badge-planned">Planned</span></div>
+          <div class="card-title">Control Who Sees What</div>
+          <div class="card-desc desc-gtm">Enterprise deals often stall on access control. This unblocks them.</div>
+          <div class="card-desc desc-product">Role definitions: Admin, Finance Manager, Dept Head, Viewer + custom. Permission scoping per entity, dashboard, report.</div>
+          <div class="card-desc desc-client">Decide exactly who sees what — board members see summaries, department heads see their own budgets.</div>
+        </div>
+      </div>
+
+      <div class="card" data-area="Forecast">
+<button class="card-custom-toggle" title="Hide from custom view"></button>
+        <div class="card-content">
+          <div class="card-top"><div class="area-dot" style="background:var(--forecast)"></div><span class="area-label" style="color:var(--forecast)">FORECAST</span><span class="status-badge badge-planned">Planned</span></div>
+          <div class="card-title">Cohort Analysis (Projections)</div>
+          <div class="card-desc desc-gtm">Subscription companies need to project revenue from new cohorts.</div>
+          <div class="card-desc desc-product">Retention curve inputs, new cohort planning table, projected matrix combining actuals + forecasts, P&amp;L integration.</div>
+          <div class="card-desc desc-client">Project how much revenue you'll get from future customers — based on how your existing ones behave.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /detailed -->
+
+
+<!-- ═══════════  SUMMARY VIEW  ═══════════ -->
+<div class="summary-view" id="summaryView">
+  <div class="summary-grid">
+
+    <div class="sum-col-now">
+      <div class="sum-col-header"><div class="month">March 2026</div><div class="subtitle">Shipping now</div></div>
+      <div class="sum-col-body">
+        <div class="sum-chip" data-area="Dashboards"><div class="sum-dot" style="background:var(--dashboards)"></div><span class="sum-name">Customize Dashboard Charts</span></div>
+        <div class="sum-chip" data-area="AI Copilot" data-internal="true"><div class="sum-dot" style="background:var(--ai)"></div><span class="sum-name">MCP for Metrics</span></div>
+        <div class="sum-chip" data-area="AI Copilot"><div class="sum-dot" style="background:var(--ai)"></div><span class="sum-name">Copilot Remembers Your Conversations</span></div>
+        <div class="sum-chip" data-area="Metrics" data-internal="true"><div class="sum-dot" style="background:var(--metrics)"></div><span class="sum-name">Formula Engine</span></div>
+        <div class="sum-chip" data-area="Forecast"><div class="sum-dot" style="background:var(--forecast)"></div><span class="sum-name">Forecast Period Management</span></div>
+        <div class="sum-chip" data-area="Forecast"><div class="sum-dot" style="background:var(--forecast)"></div><span class="sum-name">Undo Function</span></div>
+        <div class="sum-chip" data-area="Forecast"><div class="sum-dot" style="background:var(--forecast)"></div><span class="sum-name">Value Hover Tooltip</span></div>
+        <div class="sum-chip" data-area="Forecast"><div class="sum-dot" style="background:var(--forecast)"></div><span class="sum-name">Metric Hover Tooltip</span></div>
+      </div>
+    </div>
+
+    <div class="sum-col-apr">
+      <div class="sum-col-header"><div class="month">April 2026</div><div class="subtitle">Delivery</div></div>
+      <div class="sum-col-body">
+        <div class="sum-chip" data-area="Forecast"><div class="sum-dot" style="background:var(--forecast)"></div><span class="sum-name">AI Forecast Assistant</span></div>
+        <div class="sum-chip" data-area="Forecast"><div class="sum-dot" style="background:var(--forecast)"></div><span class="sum-name">Formula Builder</span></div>
+        <div class="sum-chip" data-area="Metrics"><div class="sum-dot" style="background:var(--metrics)"></div><span class="sum-name">Custom Metrics from Google Sheets</span></div>
+        <div class="sum-chip" data-area="Forecast"><div class="sum-dot" style="background:var(--forecast)"></div><span class="sum-name">Drag to Extend Forecast Values</span></div>
+        <div class="sum-chip" data-area="Reports" data-internal="true"><div class="sum-dot" style="background:var(--reports)"></div><span class="sum-name">Reports Page Design</span></div>
+        <div class="sum-chip" data-area="Dashboards"><div class="sum-dot" style="background:var(--dashboards)"></div><span class="sum-name">Build Custom Reports</span></div>
+      </div>
+    </div>
+
+    <div class="sum-col-may">
+      <div class="sum-col-header"><div class="month">May 2026</div><div class="subtitle">Delivery</div></div>
+      <div class="sum-col-body">
+        <div class="sum-chip" data-area="AI Copilot"><div class="sum-dot" style="background:var(--ai)"></div><span class="sum-name">MCP Server for Fuel</span></div>
+        <div class="sum-chip" data-area="AI Copilot"><div class="sum-dot" style="background:var(--ai)"></div><span class="sum-name">Context Awareness</span></div>
+        <div class="sum-chip" data-area="Forecast"><div class="sum-dot" style="background:var(--forecast)"></div><span class="sum-name">Forecast Sidebar</span></div>
+        <div class="sum-chip" data-area="Reports"><div class="sum-dot" style="background:var(--reports)"></div><span class="sum-name">Compare Metrics Over Time (MoM, YoY, YTD)</span></div>
+        <div class="sum-chip" data-area="UI/UX"><div class="sum-dot" style="background:var(--forecast)"></div><span class="sum-name">Company Selector</span></div>
+        <div class="sum-chip" data-area="Metrics"><div class="sum-dot" style="background:var(--metrics)"></div><span class="sum-name">Build Your Own Financial Metrics</span></div>
+        <div class="sum-chip" data-area="Onboarding"><div class="sum-dot" style="background:var(--forecast)"></div><span class="sum-name">Page Tutorials</span></div>
+        <div class="sum-chip" data-area="Forecast"><div class="sum-dot" style="background:var(--forecast)"></div><span class="sum-name">Hiring Plan &amp; Payroll Forecast</span></div>
+        <div class="sum-chip" data-area="Forecast"><div class="sum-dot" style="background:var(--forecast)"></div><span class="sum-name">Rolling Forecast</span></div>
+        <div class="sum-chip" data-area="Reports"><div class="sum-dot" style="background:var(--reports)"></div><span class="sum-name">Filter Reports by Legal Entity</span></div>
+      </div>
+    </div>
+
+    <div class="sum-col-q3">
+      <div class="sum-col-header"><div class="month">June 2026 +</div><div class="subtitle">Backlog · subject to change</div></div>
+      <div class="sum-col-body">
+        <div class="sum-chip" data-area="Forecast"><div class="sum-dot" style="background:var(--forecast)"></div><span class="sum-name">Department Budget Planning</span></div>
+        <div class="sum-chip" data-area="AI Copilot"><div class="sum-dot" style="background:var(--ai)"></div><span class="sum-name">Financial Thinking Mode</span></div>
+        <div class="sum-chip" data-area="Forecast"><div class="sum-dot" style="background:var(--forecast)"></div><span class="sum-name">AI Summary in Forecast</span></div>
+        <div class="sum-chip" data-area="Forecast"><div class="sum-dot" style="background:var(--forecast)"></div><span class="sum-name">Editing Forecast with AI Agent</span></div>
+        <div class="sum-chip" data-area="Forecast"><div class="sum-dot" style="background:var(--forecast)"></div><span class="sum-name">AI-Guided Forecast Setup</span></div>
+        <div class="sum-chip" data-area="AI Copilot"><div class="sum-dot" style="background:var(--ai)"></div><span class="sum-name">Page Context Capture</span></div>
+        <div class="sum-chip" data-area="Forecast"><div class="sum-dot" style="background:var(--forecast)"></div><span class="sum-name">Weekly Cash Flow Planning</span></div>
+        <div class="sum-chip" data-area="AI Copilot"><div class="sum-dot" style="background:var(--ai)"></div><span class="sum-name">AI Insights on Every Metric and Chart</span></div>
+        <div class="sum-chip" data-area="AI Copilot"><div class="sum-dot" style="background:var(--ai)"></div><span class="sum-name">AI Explains Anything in Fuel</span></div>
+        <div class="sum-chip" data-area="Dashboards"><div class="sum-dot" style="background:var(--dashboards)"></div><span class="sum-name">Customer Retention Analysis (Cohorts)</span></div>
+        <div class="sum-chip" data-area="Demo" data-internal="true"><div class="sum-dot" style="background:var(--forecast)"></div><span class="sum-name">Single Demo Account</span></div>
+        <div class="sum-chip" data-area="Integrations"><div class="sum-dot" style="background:var(--integrations)"></div><span class="sum-name">Sage Integration</span></div>
+        <div class="sum-chip" data-area="Integrations"><div class="sum-dot" style="background:var(--integrations)"></div><span class="sum-name">HubSpot Integration</span></div>
+        <div class="sum-chip" data-area="AI Copilot"><div class="sum-dot" style="background:var(--ai)"></div><span class="sum-name">AI Data Quality Checker</span></div>
+        <div class="sum-chip" data-area="AI Copilot"><div class="sum-dot" style="background:var(--ai)"></div><span class="sum-name">AI Bank &amp; Accounting Reconciliation</span></div>
+        <div class="sum-chip" data-area="Forecast"><div class="sum-dot" style="background:var(--forecast)"></div><span class="sum-name">Sensitivity Analysis</span></div>
+        <div class="sum-chip" data-area="Forecast"><div class="sum-dot" style="background:var(--forecast)"></div><span class="sum-name">Smart Alerts</span></div>
+        <div class="sum-chip" data-area="Integrations"><div class="sum-dot" style="background:var(--integrations)"></div><span class="sum-name">NetSuite · Xero · Salesforce</span></div>
+        <div class="sum-chip" data-area="Dashboards"><div class="sum-dot" style="background:var(--dashboards)"></div><span class="sum-name">Dashboard Builder</span></div>
+        <div class="sum-chip" data-area="Reports"><div class="sum-dot" style="background:var(--reports)"></div><span class="sum-name">Control Who Sees What</span></div>
+        <div class="sum-chip" data-area="Forecast"><div class="sum-dot" style="background:var(--forecast)"></div><span class="sum-name">Cohort Analysis (Projections)</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+  // ── Internal flag badges ──────────────────────────────────────────────────
+  document.querySelectorAll('.card[data-internal="true"]').forEach(card => {
+    const top = card.querySelector('.card-top');
+    if (!top) return;
+    const flag = document.createElement('span');
+    flag.className = 'internal-flag';
+    flag.textContent = '🔒 Internal';
+    top.appendChild(flag);
+  });
+
+  // ── Preview image loading ────────────────────────────────────────────────
+  const THUMB = 'https://image.thum.io/get/width/640/crop/380/noanimate/';
+
+  document.querySelectorAll('.card[data-preview-url]').forEach(card => {
+    const previewUrl = card.dataset.previewUrl;
+    const openUrl    = card.dataset.previewOpen;
+    const previewEl  = card.querySelector('.card-preview');
+    if (!previewEl) return;
+    const imgEl  = previewEl.querySelector('img');
+    const openBtn = previewEl.querySelector('.card-preview-open');
+    if (!imgEl) return;
+
+    if (openBtn) openBtn.href = openUrl;
+    imgEl.src = THUMB + encodeURIComponent(previewUrl);
+    imgEl.onload  = () => { previewEl.classList.add('loaded'); imgEl.classList.add('img-loaded'); };
+    imgEl.onerror = () => { previewEl.style.display = 'none'; };
+    previewEl.addEventListener('click', e => {
+      if (!e.target.closest('.card-preview-open')) window.open(openUrl, '_blank');
+    });
+  });
+
+  // ── Info tooltip ─────────────────────────────────────────────────────────
+  const infoBtn     = document.getElementById('infoBtn');
+  const infoTooltip = document.getElementById('infoTooltip');
+  const ttClose     = document.getElementById('ttClose');
+
+  if (infoBtn && infoTooltip) {
+    infoBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      infoTooltip.classList.toggle('visible');
+    });
+    if (ttClose) ttClose.addEventListener('click', () => infoTooltip.classList.remove('visible'));
+    document.addEventListener('click', e => {
+      if (!infoTooltip.contains(e.target) && e.target !== infoBtn)
+        infoTooltip.classList.remove('visible');
+    });
+  }
+
+  // ── Audience toggle ───────────────────────────────────────────────────────
+  document.body.setAttribute('data-aud', 'product');
+  document.querySelectorAll('.aud-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.aud-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.body.setAttribute('data-aud', btn.dataset.aud);
+    });
+  });
+
+  // ── Mode toggle ──────────────────────────────────────────────────────────
+  let currentMode   = 'detailed';
+  let currentFilter = 'all';
+  let currentSearch = '';
+  const detailedView = document.getElementById('detailedView');
+  const summaryView  = document.getElementById('summaryView');
+
+  function applyFilters() {
+    const f = currentFilter;
+    const q = currentSearch.toLowerCase();
+    const isMkt = f === 'marketing';
+
+    document.querySelectorAll('#detailedView .card').forEach(c => {
+      const areaOk = f === 'all' || (isMkt ? !!c.dataset.marketing : c.dataset.area === f);
+      const searchOk = !q || (c.textContent || '').toLowerCase().includes(q);
+      c.classList.toggle('hidden', !areaOk || !searchOk);
+    });
+    document.querySelectorAll('#summaryView .sum-chip').forEach(c => {
+      const areaOk = f === 'all' || (isMkt ? !!c.dataset.marketing : c.dataset.area === f);
+      const searchOk = !q || (c.textContent || '').toLowerCase().includes(q);
+      c.classList.toggle('hidden', !areaOk || !searchOk);
+    });
+  }
+
+  function applyFilter(f) {
+    currentFilter = f;
+    applyFilters();
+  }
+
+  // Search input
+  const searchInput = document.getElementById('roadmapSearch');
+  const searchClear = document.getElementById('searchClear');
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      currentSearch = searchInput.value.trim();
+      applyFilters();
+    });
+    searchInput.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { searchInput.value = ''; currentSearch = ''; applyFilters(); searchInput.blur(); }
+    });
+  }
+  if (searchClear) {
+    searchClear.addEventListener('click', () => {
+      searchInput.value = ''; currentSearch = ''; applyFilters(); searchInput.focus();
+    });
+  }
+  // Global shortcut: / to focus search
+  document.addEventListener('keydown', e => {
+    if (e.key === '/' && document.activeElement !== searchInput && !e.ctrlKey && !e.metaKey) {
+      e.preventDefault(); searchInput?.focus();
+    }
+  });
+
+  function applyMode(mode) {
+    currentMode = mode;
+    document.querySelectorAll('.mode-btn').forEach(b =>
+      b.classList.toggle('active', b.dataset.mode === mode));
+
+    const isDetailed = mode === 'detailed' || mode === 'external' || mode === 'custom';
+    if (detailedView) detailedView.style.display = isDetailed ? 'grid' : 'none';
+    if (summaryView)  summaryView.style.display   = mode === 'summary' ? 'block' : 'none';
+
+    const audToggle = document.getElementById('audienceToggle');
+    if (audToggle) audToggle.style.display = (mode === 'external' || mode === 'summary' || mode === 'custom') ? 'none' : 'flex';
+
+    const infoBtnEl = document.getElementById('infoBtn');
+    if (infoBtnEl) infoBtnEl.style.display = mode === 'detailed' ? 'flex' : 'none';
+
+    if (mode !== 'detailed' && infoTooltip) infoTooltip.classList.remove('visible');
+
+    document.body.classList.toggle('mode-external', mode === 'external');
+    document.body.classList.toggle('mode-custom',   mode === 'custom');
+
+    // Reset quarterly sub-view when leaving custom mode
+    if (mode !== 'custom' && isQuarterly) {
+      switchCustomView(false);
+    }
+    // In custom mode: detailedView visibility managed by switchCustomView + CSS
+    // Don't force display:grid here when quarterly is active
+    if (mode === 'custom' && isQuarterly) {
+      if (detailedView) detailedView.style.display = 'none';
+    }
+
+    if (mode === 'custom') updateCustomCount();
+    applyFilter(currentFilter);
+  }
+
+  document.querySelectorAll('.mode-btn').forEach(b =>
+    b.addEventListener('click', () => applyMode(b.dataset.mode)));
+
+  document.querySelectorAll('.filter-btn').forEach(b =>
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      applyFilter(b.dataset.filter);
+    }));
+
+
+
+  // ── Custom mode logic ─────────────────────────────────────────────────────
+  function updateCustomCount() {
+    const total   = document.querySelectorAll('#detailedView .card:not([data-internal="true"])').length;
+    const hidden  = document.querySelectorAll('#detailedView .card.custom-hidden').length;
+    const visible = total - hidden;
+    const el = document.getElementById('cbCount');
+    if (el) el.textContent = `${visible} of ${total} features selected`;
+    // Re-render quarterly clones to sync hidden state
+    if (isQuarterly && currentMode === 'custom') buildQuarterlyView();
+  }
+
+  // ── Quarterly view ────────────────────────────────────────────────────────
+  const quarterlyView = document.getElementById('quarterlyView');
+  let isQuarterly = false;
+
+  // Quarter definitions for 2026
+  const QUARTERS = [
+    { id: 'q1', label: 'Q1 2026', sub: 'Jan – Mar',    months: ['Jan 2026','Feb 2026','Mar 2026'] },
+    { id: 'q2', label: 'Q2 2026', sub: 'Apr – Jun',    months: ['Apr 2026','May 2026','Jun 2026'] },
+    { id: 'q3', label: 'Q3 2026', sub: 'Jul – Sep',    months: ['Jul 2026','Aug 2026','Sep 2026'] },
+    { id: 'q4', label: 'Q4 2026+', sub: 'Oct and beyond', months: [] }, // catch-all
+  ];
+
+  function getDeliverMonth(card) {
+    // Extract delivery date from date-deliver badge
+    const badge = card.querySelector('.date-deliver');
+    return badge ? badge.textContent.replace('🚀','').trim() : null;
+  }
+
+  function getCardQuarter(card) {
+    const deliver = getDeliverMonth(card);
+    if (!deliver) return 'q1'; // no date = shipping now = Q1
+    for (const q of QUARTERS.slice(0, 3)) {
+      if (q.months.includes(deliver)) return q.id;
+    }
+    return 'q4';
+  }
+
+  const AREA_COLORS = {
+    'Forecast': 'var(--forecast)', 'AI Copilot': 'var(--ai)', 'Reports': 'var(--reports)',
+    'Dashboards': 'var(--dashboards)', 'Metrics': 'var(--metrics)', 'Integrations': 'var(--integrations)',
+  };
+
+  const BADGE_MAP = {
+    'badge-delivery':  { label: 'In Delivery',      color: '#22c55e', bg: 'rgba(34,197,94,0.15)' },
+    'badge-ready':     { label: 'Ready to Deliver',  color: '#f59e0b', bg: 'rgba(245,158,11,0.15)' },
+    'badge-discovery': { label: 'Discovery',          color: '#818cf8', bg: 'rgba(99,102,241,0.15)' },
+    'badge-planned':   { label: 'Planned',            color: '#6b7280', bg: 'rgba(107,114,128,0.12)' },
+  };
+
+  function buildQuarterlyView() {
+    if (!quarterlyView) return;
+
+    const allCards = [...document.querySelectorAll('#detailedView .card:not([data-internal="true"])')];
+
+    // Group card DOM nodes by quarter
+    const groups = { q1: [], q2: [], q3: [], q4: [] };
+    allCards.forEach(card => {
+      groups[getCardQuarter(card)].push(card);
+    });
+
+    // Build column HTML skeletons
+    quarterlyView.innerHTML = QUARTERS.map(q => `
+      <div class="q-col">
+        <div class="col-header q-col-hdr-${q.id}">
+          <div class="month">${q.label}</div>
+          <div class="subtitle">${q.sub}</div>
+        </div>
+        <div class="col-body" id="qbody-${q.id}"></div>
+      </div>`).join('');
+
+    // Clone and append real cards into each quarter column
+    QUARTERS.forEach(q => {
+      const body = document.getElementById('qbody-' + q.id);
+      if (!body) return;
+      const cards = groups[q.id] || [];
+      if (cards.length === 0) {
+        body.innerHTML = '<div style="font-size:11px;color:#374151;text-align:center;padding:20px 0;">No features</div>';
+        return;
+      }
+      cards.forEach(card => {
+        const clone = card.cloneNode(true);
+        // Sync hidden state from original
+        clone.classList.toggle('custom-hidden', card.classList.contains('custom-hidden'));
+        // Wire up clone's toggle button to the original card
+        const cloneToggle = clone.querySelector('.card-custom-toggle');
+        if (cloneToggle) {
+          cloneToggle.addEventListener('click', e => {
+            e.stopPropagation();
+            const isHidden = card.classList.toggle('custom-hidden');
+            clone.classList.toggle('custom-hidden', isHidden);
+            // Also sync original card's own toggle button text
+            const origToggle = card.querySelector('.card-custom-toggle');
+            if (origToggle) origToggle.title = isHidden ? 'Add back to view' : 'Hide from custom view';
+            updateCustomCount();
+            renderHiddenPanel();
+          });
+        }
+        body.appendChild(clone);
+      });
+    });
+  }
+
+  function switchCustomView(quarterly) {
+    isQuarterly = quarterly;
+    const btnM = document.getElementById('cbViewMonthly');
+    const btnQ = document.getElementById('cbViewQuarterly');
+    if (btnM) btnM.classList.toggle('active', !quarterly);
+    if (btnQ) btnQ.classList.toggle('active',  quarterly);
+
+    if (quarterly) {
+      buildQuarterlyView();
+      if (quarterlyView) {
+        quarterlyView.style.display = 'grid';
+        quarterlyView.classList.add('active');
+      }
+      // Hide monthly timeline explicitly
+      if (detailedView) detailedView.style.display = 'none';
+    } else {
+      if (quarterlyView) {
+        quarterlyView.style.display = 'none';
+        quarterlyView.classList.remove('active');
+      }
+      // Restore monthly timeline (only if still in custom mode)
+      if (currentMode === 'custom' && detailedView) detailedView.style.display = 'grid';
+    }
+  }
+
+  const cbViewMonthly    = document.getElementById('cbViewMonthly');
+  const cbViewQuarterly  = document.getElementById('cbViewQuarterly');
+  if (cbViewMonthly)   cbViewMonthly.addEventListener('click',   () => switchCustomView(false));
+  if (cbViewQuarterly) cbViewQuarterly.addEventListener('click', () => switchCustomView(true));
+
+
+  // Per-card toggle buttons
+  document.querySelectorAll('.card-custom-toggle').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const card = btn.closest('.card');
+      card.classList.toggle('custom-hidden');
+      btn.title = card.classList.contains('custom-hidden') ? 'Add back to view' : 'Hide from custom view';
+      // Sync quarterly chip if visible
+      if (isQuarterly && quarterlyView) {
+        const title = card.querySelector('.card-title')?.textContent || '';
+        const chip = quarterlyView.querySelector(`.q-chip[data-title="${title.replace(/"/g,'&quot;')}"]`);
+        if (chip) {
+          chip.classList.toggle('custom-hidden', card.classList.contains('custom-hidden'));
+          const t = chip.querySelector('.q-chip-toggle');
+          if (t) t.title = card.classList.contains('custom-hidden') ? 'Add back' : 'Hide';
+        }
+      }
+      updateCustomCount();
+      renderHiddenPanel();
+    });
+  });
+
+  // Hidden features panel
+  const hiddenPanel = document.getElementById('hiddenPanel');
+  const hpList      = document.getElementById('hpList');
+  const hpClose     = document.getElementById('hpClose');
+  const cbShowHidden = document.getElementById('cbShowHidden');
+
+  function renderHiddenPanel() {
+    if (!hpList) return;
+    const hiddenCards = [...document.querySelectorAll('#detailedView .card.custom-hidden')];
+    if (hiddenCards.length === 0) {
+      hpList.innerHTML = '<div class="hp-empty">No hidden features</div>';
+      return;
+    }
+    hpList.innerHTML = hiddenCards.map(card => {
+      const title = card.querySelector('.card-title')?.textContent || '';
+      return `<div class="hp-item" data-card-id="${title}">
+        <span class="hp-item-name">${title}</span>
+        <span class="hp-item-add">+ Add back</span>
+      </div>`;
+    }).join('');
+
+    hpList.querySelectorAll('.hp-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const title = item.dataset.cardId;
+        const card = [...document.querySelectorAll('#detailedView .card')].find(c =>
+          c.querySelector('.card-title')?.textContent === title);
+        if (card) {
+          card.classList.remove('custom-hidden');
+          const toggle = card.querySelector('.card-custom-toggle');
+          if (toggle) toggle.title = 'Hide from custom view';
+        }
+        // Also sync quarterly chip if visible
+        if (isQuarterly && quarterlyView) {
+          const chip = quarterlyView.querySelector(`.q-chip[data-title="${title.replace(/"/g,'&quot;')}"]`);
+          if (chip) {
+            chip.classList.remove('custom-hidden');
+            const t = chip.querySelector('.q-chip-toggle');
+            if (t) t.title = 'Hide';
+          }
+        }
+        updateCustomCount();
+        renderHiddenPanel();
+      });
+    });
+  }
+
+  if (cbShowHidden) {
+    cbShowHidden.addEventListener('click', e => {
+      e.stopPropagation();
+      renderHiddenPanel();
+      hiddenPanel.classList.toggle('visible');
+    });
+  }
+  if (hpClose) hpClose.addEventListener('click', () => hiddenPanel.classList.remove('visible'));
+  document.addEventListener('click', e => {
+    if (hiddenPanel && !hiddenPanel.contains(e.target) && e.target !== cbShowHidden)
+      hiddenPanel.classList.remove('visible');
+  });
+
+  // Reset — restore all hidden cards
+  const cbReset = document.getElementById('cbReset');
+  if (cbReset) {
+    cbReset.addEventListener('click', () => {
+      document.querySelectorAll('#detailedView .card.custom-hidden').forEach(card => {
+        card.classList.remove('custom-hidden');
+        const toggle = card.querySelector('.card-custom-toggle');
+        if (toggle) toggle.title = 'Hide from custom view';
+      });
+      updateCustomCount();
+      renderHiddenPanel();
+    });
+  }
+
+  // Custom download — only visible cards, External-style
+  const cbDownload = document.getElementById('cbDownload');
+  if (cbDownload) {
+    cbDownload.addEventListener('click', () => {
+      const clone = document.documentElement.cloneNode(true);
+
+      // Remove all UI chrome
+      clone.querySelector('.mode-toggle')?.remove();
+      clone.querySelector('.controls-row')?.remove();
+      clone.querySelector('#audienceToggle')?.remove();
+      clone.querySelector('#infoBtn')?.remove();
+      clone.querySelector('#infoTooltip')?.remove();
+      clone.querySelector('#downloadBtn')?.remove();
+      clone.querySelector('#customBar')?.remove();
+      clone.querySelector('#hiddenPanel')?.remove();
+
+      // Apply external-style rendering (client desc, no badges/links/meta)
+      clone.querySelector('body').classList.add('mode-external');
+      clone.querySelector('body').classList.remove('mode-custom');
+
+      // Hide all custom-hidden cards in clone
+      clone.querySelectorAll('#detailedView .card.custom-hidden').forEach(c => c.style.display = 'none');
+
+      // Hide internal cards
+      clone.querySelectorAll('#detailedView .card[data-internal="true"]').forEach(c => c.style.display = 'none');
+
+      // Remove toggle buttons
+      clone.querySelectorAll('.card-custom-toggle').forEach(b => b.remove());
+      clone.querySelector('#quarterlyView')?.remove();
+
+      // Show only detailedView (always use monthly layout for download)
+      const cloneDetailed = clone.querySelector('#detailedView');
+      const cloneSummary  = clone.querySelector('#summaryView');
+      if (cloneDetailed) cloneDetailed.style.display = 'grid';
+      if (cloneSummary)  cloneSummary.style.display  = 'none';
+
+      const subtitle = clone.querySelector('.header-left p');
+      if (subtitle) subtitle.textContent = 'Custom selection · ' + new Date().toLocaleDateString('en-US', {month:'long', year:'numeric'});
+
+      const html = '<!DOCTYPE html>\n' + clone.outerHTML;
+      const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = 'fuel-roadmap-custom.html';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  }
+
+  // ── Screenshot (PNG export) ───────────────────────────────────────────────
+  const screenshotBtn = document.getElementById('screenshotBtn');
+  if (screenshotBtn) {
+    screenshotBtn.addEventListener('click', async () => {
+      screenshotBtn.textContent = '⏳';
+      screenshotBtn.disabled = true;
+
+      try {
+        // Temporarily show full timeline height (no scroll clipping)
+        const target = document.querySelector('.timeline:not([style*="none"])') || document.body;
+
+        const canvas = await html2canvas(document.body, {
+          backgroundColor: '#0d0f14',
+          scale: 1.5,
+          useCORS: true,
+          logging: false,
+          windowWidth: document.body.scrollWidth,
+          windowHeight: document.body.scrollHeight,
+          scrollY: -window.scrollY,
+          scrollX: 0,
+          ignoreElements: el => {
+            // Skip UI chrome: controls, buttons, tooltips, toggle buttons
+            return el.id === 'customBar' ||
+                   el.id === 'hiddenPanel' ||
+                   el.id === 'infoTooltip' ||
+                   el.classList.contains('card-custom-toggle') ||
+                   el.classList.contains('controls-row') ||
+                   el.classList.contains('mode-toggle') ||
+                   el.classList.contains('audience-toggle') ||
+                   el.id === 'downloadBtn' ||
+                   el.id === 'screenshotBtn' ||
+                   el.id === 'infoBtn';
+          }
+        });
+
+        // Download
+        const link = document.createElement('a');
+        const mode = currentMode;
+        link.download = `fuel-roadmap-2026-${mode}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      } catch(err) {
+        alert('Screenshot failed: ' + err.message);
+      } finally {
+        screenshotBtn.innerHTML = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="14" height="10" rx="1.5"/><circle cx="8" cy="8" r="2.5"/><path d="M5.5 3l1-1.5h3L10.5 3"/></svg> PNG`;
+        screenshotBtn.disabled = false;
+      }
+    });
+  }
+
+  // ── Download ─────────────────────────────────────────────────────────────
+  const downloadBtn = document.getElementById('downloadBtn');
+  if (downloadBtn) {
+    downloadBtn.addEventListener('click', () => {
+      const clone = document.documentElement.cloneNode(true);
+      clone.querySelector('.mode-toggle')?.remove();
+      clone.querySelector('.controls-row')?.remove();
+      clone.querySelector('#audienceToggle')?.remove();
+      clone.querySelector('#infoBtn')?.remove();
+      clone.querySelector('#infoTooltip')?.remove();
+      clone.querySelector('#downloadBtn')?.remove();
+
+      if (currentMode === 'external') clone.querySelector('body').classList.add('mode-external');
+
+      if (currentFilter !== 'all') {
+        clone.querySelectorAll('#detailedView .card').forEach(c => {
+          if (c.dataset.area !== currentFilter) c.style.display = 'none';
+        });
+        clone.querySelectorAll('#summaryView .sum-chip').forEach(c => {
+          if (c.dataset.area !== currentFilter) c.style.display = 'none';
+        });
+      }
+
+      const cloneDetailed = clone.querySelector('#detailedView');
+      const cloneSummary  = clone.querySelector('#summaryView');
+      if (currentMode === 'summary') {
+        if (cloneDetailed) cloneDetailed.style.display = 'none';
+        if (cloneSummary)  cloneSummary.style.display  = 'block';
+      } else {
+        if (cloneDetailed) cloneDetailed.style.display = 'grid';
+        if (cloneSummary)  cloneSummary.style.display  = 'none';
+      }
+
+      const subtitle = clone.querySelector('.header-left p');
+      if (subtitle) {
+        const modeLabel = { detailed: 'Detailed', external: 'External', summary: 'Summary' }[currentMode];
+        subtitle.textContent = `Updated March 2026 · ${modeLabel} · ${currentFilter === 'all' ? 'All areas' : currentFilter}`;
+      }
+
+      const html = '<!DOCTYPE html>\n' + clone.outerHTML;
+      const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = `fuel-roadmap-2026-${currentMode}-${currentFilter.toLowerCase().replace(/\s+/g,'-')}.html`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  }
+
+}); // end DOMContentLoaded
+
+
+  // ── Past columns toggle ──────────────────────────────────────────────────
+  (function() {
+    const pastCols = document.querySelectorAll('.col-past');
+    const timeline  = document.getElementById('detailedView');
+    if (!pastCols.length || !timeline) return;
+
+    // Create scroll wrapper for past cols
+    const historyScroll = document.createElement('div');
+    historyScroll.id = 'historyScroll';
+    // Move all past cols into the scroll wrapper
+    pastCols.forEach(c => historyScroll.appendChild(c));
+
+    // Create toggle button
+    const btn = document.createElement('button');
+    btn.id = 'pastToggleBtn';
+    btn.title = 'Show / hide shipped history';
+    btn.innerHTML = '<span class="ptb-icon">›</span><span class="ptb-text">History</span>';
+    btn.style.display = 'flex';
+
+    // Wrap: [btn] [historyScroll] [timeline]
+    const outer = document.createElement('div');
+    outer.id = 'timelineOuter';
+    timeline.parentNode.insertBefore(outer, timeline);
+    outer.appendChild(btn);
+    outer.appendChild(historyScroll);
+    outer.appendChild(timeline);
+
+    // Grid for main timeline (past cols are now outside it)
+    function updateGrid() {
+      const total = document.querySelectorAll('#detailedView > [class*="col-"]').length;
+      timeline.style.gridTemplateColumns = `repeat(${total}, 1fr)`;
+    }
+    updateGrid();
+
+    btn.addEventListener('click', () => {
+      const open = btn.classList.toggle('open');
+      historyScroll.classList.toggle('open', open);
+      btn.querySelector('.ptb-icon').textContent = open ? '‹' : '›';
+    });
+  })();
+
+
+  // ── Sticky col-headers: compute offset dynamically ───────────────────────
+  function updateStickyOffset() {
+    const hdr = document.querySelector('.header');
+    if (!hdr) return;
+    const h = hdr.getBoundingClientRect().height;
+    document.documentElement.style.setProperty('--header-h', h + 'px');
+  }
+  updateStickyOffset();
+  window.addEventListener('resize', updateStickyOffset);
+
+  // ── ONE-PAGER MODAL ───────────────────────────────────────────────────────
+function openOnePager(pdfPath, featureTitle) {
+  document.getElementById('op-modal-frame').src = pdfPath;
+  document.getElementById('op-modal-title').textContent = featureTitle + ' — One-pager';
+  document.getElementById('op-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeOnePager() {
+  document.getElementById('op-modal').classList.remove('open');
+  document.getElementById('op-modal-frame').src = '';
+  document.body.style.overflow = '';
+}
+document.getElementById('op-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeOnePager();
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeOnePager();
+});
+</script>
+
+<div class="info-tooltip" id="infoTooltip">
+  <button class="tt-close" id="ttClose">×</button>
+  <h3>How to read this roadmap</h3>
+
+  <h4>Areas</h4>
+  <div class="tt-row"><div class="tt-dot" style="background:var(--platform)"></div><span><strong style="color:#e2e8f0">Platform foundations</strong> — auth, workspaces, agent runtime, audit, notifications</span></div>
+  <div class="tt-row"><div class="tt-dot" style="background:var(--data)"></div><span><strong style="color:#e2e8f0">Data engine</strong> — client data layer, QBO/billing/bank connectors, data scope</span></div>
+  <div class="tt-row"><div class="tt-dot" style="background:var(--context)"></div><span><strong style="color:#e2e8f0">Shared context</strong> — 16 context layers, per-agent subscriptions, Slack editing</span></div>
+  <div class="tt-row"><div class="tt-dot" style="background:var(--agents)"></div><span><strong style="color:#e2e8f0">Agents</strong> — the 10 MVP agents (Onboarding, Reconciliation, Controller, AR/AP, Analysis, Forecasting, CFO, Founder, Retrospective)</span></div>
+  <div class="tt-row"><div class="tt-dot" style="background:var(--workflows)"></div><span><strong style="color:#e2e8f0">Workflows</strong> — Monthly Close, ad-hoc Slack queries, run-now, custom workflows</span></div>
+  <div class="tt-row"><div class="tt-dot" style="background:var(--cabinet)"></div><span><strong style="color:#e2e8f0">Cabinet pages</strong> — Reports, Agents, Workflows, Context, Audit, Settings</span></div>
+  <div class="tt-row"><div class="tt-dot" style="background:var(--settings)"></div><span><strong style="color:#e2e8f0">Agent settings</strong> — per-agent config modal & notification rules</span></div>
+  <div class="tt-row"><div class="tt-dot" style="background:var(--artifacts)"></div><span><strong style="color:#e2e8f0">Custom artifacts</strong> — static & interactive outputs</span></div>
+  <div class="tt-row"><div class="tt-dot" style="background:var(--slack)"></div><span><strong style="color:#e2e8f0">Slack-first</strong> — install, in-Slack agents, approval cards, proactive posts</span></div>
+  <div class="tt-row"><div class="tt-dot" style="background:var(--crosscut)"></div><span><strong style="color:#e2e8f0">Cross-cutting</strong> — role-based UI, toasts, cabinet shell</span></div>
+
+  <h4>Status</h4>
+  <div class="tt-row"><span class="tt-badge badge-delivery">In Delivery</span><span>Passed to engineering — feature is actively being built right now</span></div>
+  <div class="tt-row"><span class="tt-badge badge-ready">Ready to Deliver</span><span>Discovery complete — ready to pass to engineering, not yet started</span></div>
+  <div class="tt-row"><span class="tt-badge badge-discovery">Discovery</span><span>In active discovery: PRD, design or research underway</span></div>
+  <div class="tt-row"><span class="tt-badge badge-planned">Planned</span><span>Scheduled for future discovery, not yet started</span></div>
+
+  <h4>Progress bar</h4>
+  <div class="tt-row" style="flex-direction:column;gap:4px">
+    <div style="display:flex;align-items:center;gap:8px"><div class="tt-prog" style="width:80px"><div class="tt-prog-fill" style="width:90%;background:#22c55e"></div></div><span>In development (90%)</span></div>
+    <div style="display:flex;align-items:center;gap:8px"><div class="tt-prog" style="width:80px"><div class="tt-prog-fill" style="width:65%;background:#f59e0b"></div></div><span>In design (65%)</span></div>
+    <div style="display:flex;align-items:center;gap:8px"><div class="tt-prog" style="width:80px"><div class="tt-prog-fill" style="width:35%;background:#8b5cf6"></div></div><span>Preparing PRD (35%)</span></div>
+    <div style="display:flex;align-items:center;gap:8px"><div class="tt-prog" style="width:80px"><div class="tt-prog-fill" style="width:20%;background:#6366f1"></div></div><span>Research (20%)</span></div>
+  </div>
+
+  <h4>Dates</h4>
+  <div class="tt-row"><span class="date-badge date-disc">🔍 Mar 2026</span><span>Discovery end — when spec is ready for dev</span></div>
+  <div class="tt-row"><span class="date-badge date-deliver">🚀 Apr 2026</span><span>Delivery — expected release to production</span></div>
+
+  <h4>Links</h4>
+  <div class="tt-row"><span class="tt-lp ln">Description</span><span>Notion page with context and scope</span></div>
+  <div class="tt-row"><span class="tt-lp lprd">PRD</span><span>Full product requirements document</span></div>
+  <div class="tt-row"><span class="tt-lp ld">Design</span><span>Figma design file</span></div>
+  <div class="tt-row"><span class="tt-lp lr">Research</span><span>Market or user research</span></div>
+  <div class="tt-row"><span class="tt-lp lpr">Prototype</span><span>Interactive prototype or demo</span></div>
+</div>
+
+
+<!-- ONE-PAGER MODAL -->
+<div id="op-modal">
+  <div id="op-modal-box">
+    <div id="op-modal-bar">
+      <span id="op-modal-title"></span>
+      <button id="op-modal-close" onclick="closeOnePager()">✕</button>
+    </div>
+    <iframe id="op-modal-frame" src="" title="One-pager"></iframe>
+  </div>
+</div>
+</body>
+</html>
