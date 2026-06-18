@@ -603,7 +603,7 @@ def read_features(spreadsheet):
 
     def add(title_raw, area, status, disc_date, deliver_date, internal, links,
              sheet_status="", desc_gtm="", desc_product="", desc_client="", marketing=False,
-             pilot_date="", rollout_date=""):
+             pilot_date="", rollout_date="", stage="", responsible=""):
         title = TITLE_MAP.get(title_raw, title_raw)
         if title == "__SKIP__" or not title or title == "nan":
             return
@@ -625,6 +625,8 @@ def read_features(spreadsheet):
             "marketing": marketing,
             "pilot_date": pilot_date,
             "rollout_date": rollout_date,
+            "stage": clean_desc(stage),
+            "responsible": clean_desc(responsible),
         })
 
     # ── Shipped (fully delivered features) — read FIRST so past dates win ─
@@ -720,7 +722,7 @@ def read_features(spreadsheet):
         if not epic or epic == "nan":
             continue
         internal = str(row.get("Client-facing?", "Yes")).strip().lower() in ("no", "false", "0")
-        disc  = fmt_date(row.get("Expected date of ready of discovery", ""))
+        disc  = fmt_date(row.get("Date of discovery end") or row.get("Expected date of ready of discovery", ""))
         deliv = fmt_date(row.get("Date of delivery") or row.get("Expected month of delivery") or row.get("Expected month of delivery (Oleksandr's gestimation)", ""))
         add(epic,
             area=str(row.get("Area", "Platform foundations")).strip(),
@@ -734,7 +736,9 @@ def read_features(spreadsheet):
             desc_client=clean_desc(row.get("Desc Client", "")),
             marketing=clean_bool(row.get("Is significant for separate marketing release?", False)),
             pilot_date=fmt_date(row.get("Pilot date", "") or ""),
-            rollout_date=fmt_date(row.get("Full rollout date", "") or ""))
+            rollout_date=fmt_date(row.get("Full rollout date", "") or ""),
+            stage=str(row.get("Current stage", "")).strip(),
+            responsible=row.get("Responsible for discovery", ""))
 
     # ── Features in discovery ────────────────────────────────────────────
     df = sheet_to_df(spreadsheet, SHEET_TABS["discovery"])
@@ -746,10 +750,8 @@ def read_features(spreadsheet):
         stage = str(row.get("Current stage", "")).strip()
         status = normalize_status(stage)
 
-        disc_col   = "Expected date of ready of discovery"
-        deliv_col  = "Date of delivery"
-        disc  = fmt_date(row.get(disc_col, ""))
-        deliv = fmt_date(row.get(deliv_col, ""))
+        disc  = fmt_date(row.get("Date of discovery end") or row.get("Expected date of ready of discovery", ""))
+        deliv = fmt_date(row.get("Date of delivery", ""))
 
         add(epic,
             area=str(row.get("Area", "Platform foundations")).strip(),
@@ -763,7 +765,9 @@ def read_features(spreadsheet):
             desc_client=clean_desc(row.get("Desc Client", "")),
             marketing=clean_bool(row.get("Is significant for separate marketing release?", False)),
             pilot_date=fmt_date(row.get("Pilot date", "") or ""),
-            rollout_date=fmt_date(row.get("Full rollout date", "") or ""))
+            rollout_date=fmt_date(row.get("Full rollout date", "") or ""),
+            stage=stage,
+            responsible=row.get("Responsible for discovery", ""))
 
     # ── New features for discovery ───────────────────────────────────────
     df = sheet_to_df(spreadsheet, SHEET_TABS["new"])
@@ -944,6 +948,106 @@ def build_sum_col(css_cls, month, sub, chips):
 # GENERATE
 # ═══════════════════════════════════════════════════════════════════════════
 
+# ═══════════════════════════════════════════════════════════════════════════
+# WORK BOARD (Kanban) — board.html
+# ═══════════════════════════════════════════════════════════════════════════
+
+def board_col_of(f):
+    """Map a feature to a board column."""
+    st = f.get("status")
+    ss = str(f.get("sheet_status", "")).strip().lower()
+    if st == "In Delivery":
+        return "shipped" if "shipped" in ss else "delivery"
+    if st == "Ready to Deliver":
+        return "ready"
+    if st == "Discovery":
+        return "discovery"
+    return "planned"
+
+def _board_date_key(f, field):
+    import datetime as _dt
+    v = f.get(field)
+    try:
+        return _dt.datetime.strptime(v, "%b %Y") if v else _dt.datetime.max
+    except Exception:
+        return _dt.datetime.max
+
+def build_board_card(f):
+    area = f["area"]
+    color_var, area_label = AREA_CONFIG.get(area, ("--platform", area))
+    badges = []
+    if f.get("disc_date"):
+        badges.append(f'<span class="bbadge disc">🔍 disc {esc(f["disc_date"])}</span>')
+    if f.get("deliver_date"):
+        badges.append(f'<span class="bbadge deadline">🚀 {esc(f["deliver_date"])}</span>')
+    if f.get("pilot_date") and str(f["pilot_date"]).lower() not in ("", "nan", "none"):
+        badges.append(f'<span class="bbadge pilot">🧪 {esc(f["pilot_date"])}</span>')
+    if f.get("rollout_date") and str(f["rollout_date"]).lower() not in ("", "nan", "none"):
+        badges.append(f'<span class="bbadge rollout">🌐 {esc(f["rollout_date"])}</span>')
+    if f.get("marketing"):
+        badges.append('<span class="bbadge mkt">✦ Marketing</span>')
+    badges_html = f'<div class="bmeta">{"".join(badges)}</div>' if badges else ""
+    stage_txt = f.get("stage") or f.get("sheet_status") or ""
+    stage_html = f'<div class="bstage">{esc(stage_txt)}</div>' if stage_txt and str(stage_txt).lower() not in ("nan", "none") else ""
+    resp = f.get("responsible")
+    resp_html = f'<div class="bresp">👤 {esc(resp)}</div>' if resp and str(resp).lower() not in ("nan", "none", "") else ""
+    mkt_attr = ' data-mkt="1"' if f.get("marketing") else ""
+    return (
+        f'      <div class="bcard" data-area="{esc(area)}"{mkt_attr} style="border-left-color:var({color_var})">\n'
+        f'        <div class="bcard-area"><span class="dot" style="background:var({color_var})"></span><span style="color:var({color_var})">{esc(area_label)}</span></div>\n'
+        f'        <div class="bcard-title">{esc(f["title"])}</div>\n'
+        f'        {stage_html}{badges_html}{resp_html}\n'
+        f'      </div>'
+    )
+
+def build_board_col(col_id, title, dot_color, cards):
+    inner = "\n".join(cards) if cards else '      <div class="bempty">No features here yet</div>'
+    return (
+        f'    <div class="bcol" data-col="{col_id}">\n'
+        f'      <div class="bcol-head">\n'
+        f'        <div class="bcol-title"><span class="bcol-dot" style="background:{dot_color}"></span>{title}</div>\n'
+        f'        <span class="bcol-count">{len(cards)}</span>\n'
+        f'      </div>\n'
+        f'{inner}\n'
+        f'    </div>'
+    )
+
+def generate_board(features):
+    from pathlib import Path as _P
+    cols = {"planned": [], "discovery": [], "ready": [], "delivery": [], "shipped": []}
+    for f in features:
+        cols[board_col_of(f)].append(f)
+    cols["discovery"].sort(key=lambda f: _board_date_key(f, "disc_date"))
+    cols["ready"].sort(key=lambda f: _board_date_key(f, "deliver_date"))
+    cols["delivery"].sort(key=lambda f: _board_date_key(f, "deliver_date"))
+    cols["planned"].sort(key=lambda f: _board_date_key(f, "deliver_date"))
+
+    COLDEF = [
+        ("planned",   "Planned (MVP)",      "#6366f1"),
+        ("discovery", "Discovery",          "#f59e0b"),
+        ("ready",     "Ready for delivery", "#eab308"),
+        ("delivery",  "In delivery",        "#22c55e"),
+        ("shipped",   "Shipped",            "#94a3b8"),
+    ]
+    cols_html = "\n".join(
+        build_board_col(cid, title, dot, [build_board_card(f) for f in cols[cid]])
+        for cid, title, dot in COLDEF
+    )
+    board_html = f'<div class="board" id="boardView">\n{cols_html}\n</div><!-- /board -->'
+
+    base_path = _P(__file__).parent / "board.html"
+    if not base_path.exists():
+        print("  ⚠ board.html template not found — skipping board")
+        return
+    base = open(base_path, encoding="utf-8").read()
+    s = base.index('<div class="board" id="boardView">')
+    e = base.index('</div><!-- /board -->') + len('</div><!-- /board -->')
+    base = base[:s] + board_html + base[e:]
+    base = re.sub(r'Updated \w+ \d{4}', f'Updated {datetime.now().strftime("%B %Y")}', base)
+    open(base_path, "w", encoding="utf-8").write(base)
+    print(f"✓  Saved board → {base_path}  " + str({k: len(v) for k, v in cols.items()}))
+
+
 def generate(features, output_path):
     import datetime as _dt
     _today = _dt.date.today()
@@ -1087,6 +1191,7 @@ def main():
 
     output = Path(args.output)
     generate(features, output)
+    generate_board(features)
 
 if __name__ == "__main__":
     main()
