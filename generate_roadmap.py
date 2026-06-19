@@ -443,6 +443,11 @@ AREA_CONFIG = {
     "Cross-cutting concerns":    ("--crosscut",     "Cross-cutting"),
 }
 
+# Normalize sheet area values that differ from AREA_CONFIG keys.
+AREA_ALIASES = {
+    "Data integrations": "Data engine",
+}
+
 
 # ═══════════════════════════════════════════════════════════════════════════
 # GOOGLE SHEETS READER
@@ -610,9 +615,10 @@ def read_features(spreadsheet):
         if title in seen:
             return
         seen.add(title)
+        area = AREA_ALIASES.get((area or "").strip(), area)
         features.append({
             "title": title,
-            "area": area or "Forecast",
+            "area": area or "Platform foundations",
             "status": status,
             "sheet_status": sheet_status,
             "disc_date": disc_date,
