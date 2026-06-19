@@ -586,8 +586,10 @@
   .link.hl { stroke-opacity:0.95; stroke-width:2px; }
   .node rect { cursor:pointer; transition:opacity .15s, stroke-width .12s; }
   .node text { font-family:'Sora',sans-serif; font-size:10px; font-weight:600; fill:#e8eaf0; pointer-events:none; transition:opacity .15s, fill .15s; }
-  .node.hovered rect { stroke-width:2.5px; }
+  .node.hovered rect { stroke-width:2.6px; }
   .node.hovered text { fill:#fff; }
+  .cluster-box { fill:rgba(255,255,255,0.018); stroke:var(--border); stroke-width:1px; }
+  .cluster-title { font-family:'Sora',sans-serif; font-size:10px; font-weight:700; letter-spacing:0.7px; pointer-events:none; }
   .dim { opacity:0.10 !important; }
 
 </style>
@@ -647,120 +649,106 @@ document.addEventListener('DOMContentLoaded', function () {
   const svg = d3.select(svgEl);
   const g = svg.append('g');
 
-  // zoom / pan
-  svg.call(d3.zoom().scaleExtent([0.3, 3]).on('zoom', e => g.attr('transform', e.transform)));
+  // zoom / pan (node dragging intentionally disabled)
+  const zoom = d3.zoom().scaleExtent([0.2, 2.5]).on('zoom', e => g.attr('transform', e.transform));
+  svg.call(zoom).on('dblclick.zoom', null);
 
-  // neighbor lookup
+  // neighbour lookup
   const neighbors = new Map(graph.nodes.map(n => [n.id, new Set([n.id])]));
-  graph.links.forEach(l => {
-    const sId = (typeof l.source === 'object') ? l.source.id : l.source;
-    const tId = (typeof l.target === 'object') ? l.target.id : l.target;
-    neighbors.get(sId).add(tId); neighbors.get(tId).add(sId);
-  });
+  graph.links.forEach(l => { neighbors.get(l.source).add(l.target); neighbors.get(l.target).add(l.source); });
+  const nodeById = new Map(graph.nodes.map(n => [n.id, n]));
 
-  // Layered layout: area -> [targetX frac, targetY frac]  (y grows downward; base = bottom)
-  const TIER = {
-    // base (bottom) — foundation
-    "Documentation Tool":         [0.32, 0.84],
-    "Platform foundations":       [0.50, 0.86],
-    "Data engine":                [0.68, 0.84],
-    // tier 1 — sits on the base
-    "Slack-first interface":      [0.32, 0.58],
-    "Shared context (16 layers)": [0.50, 0.60],
-    "Agents (10 in MVP)":         [0.68, 0.58],
-    // uniting layer
-    "Workflows":                  [0.50, 0.33],
-    // side-left, separate
-    "AI Dev Acceleration":        [0.09, 0.40],
-    // side-right, separate (Cabinet + everything else)
-    "Cabinet — pages":            [0.90, 0.28],
-    "Agent settings UI":          [0.91, 0.46],
-    "Custom artifacts":           [0.91, 0.63],
-    "Cross-cutting concerns":     [0.90, 0.80],
+  // ---- static grouped layout: area -> [col, row] ----
+  const ZONE = {
+    "Workflows":                  [2, 0],
+    "Cabinet — pages":            [4, 0],
+    "AI Dev Acceleration":        [0, 1],
+    "Slack-first interface":      [1, 1],
+    "Shared context (16 layers)": [2, 1],
+    "Agents (10 in MVP)":         [3, 1],
+    "Agent settings UI":          [4, 1],
+    "Documentation Tool":         [1, 2],
+    "Platform foundations":       [2, 2],
+    "Data engine":                [3, 2],
+    "Custom artifacts":           [4, 2],
+    "Cross-cutting concerns":     [4, 3],
   };
-  const POS = a => TIER[a] || [0.90, 0.55];
+  const DEF_ZONE = [4, 3];
 
-  // ---- box sizes (compute BEFORE forces use them) ----
-  const BOX_H = 28;
+  const BOX_W = 212, BOX_H = 30, V_GAP = 8, TITLE_H = 30, PAD = 14, COL_GAP = 50, ROW_GAP = 50;
   function label(d) { return d.title.length > 30 ? d.title.slice(0,29) + '…' : d.title; }
-  function boxW(d) { return Math.max(64, label(d).length * 6.2 + 22); }
-  graph.nodes.forEach(d => { d.boxW = boxW(d); d.boxH = BOX_H; });
 
-  // ---- rectangular collision: hard-separate overlapping boxes ----
-  function rectCollide(pad) {
-    let nodes;
-    function force() {
-      for (let iter = 0; iter < 3; iter++) {
-        for (let i = 0; i < nodes.length; i++) {
-          for (let j = i + 1; j < nodes.length; j++) {
-            const a = nodes[i], b = nodes[j];
-            let dx = b.x - a.x, dy = b.y - a.y;
-            if (dx === 0 && dy === 0) { dx = Math.random() - 0.5; dy = Math.random() - 0.5; }
-            const ovX = (a.boxW/2 + b.boxW/2 + pad) - Math.abs(dx);
-            const ovY = (a.boxH/2 + b.boxH/2 + pad) - Math.abs(dy);
-            if (ovX > 0 && ovY > 0) {
-              if (ovX < ovY) { const s = (dx < 0 ? -1 : 1) * ovX/2; a.x -= s; b.x += s; }
-              else           { const s = (dy < 0 ? -1 : 1) * ovY/2; a.y -= s; b.y += s; }
-            }
-          }
-        }
-      }
-    }
-    force.initialize = (n) => { nodes = n; };
-    return force;
-  }
+  // group nodes by area
+  const groups = {};
+  graph.nodes.forEach(n => { (groups[n.area] = groups[n.area] || []).push(n); });
 
-  const sim = d3.forceSimulation(graph.nodes)
-    .force('link', d3.forceLink(graph.links).id(d => d.id).distance(120).strength(0.04))
-    .force('x', d3.forceX(d => POS(d.area)[0] * W).strength(0.09))
-    .force('y', d3.forceY(d => POS(d.area)[1] * H).strength(0.45))
-    .force('rect', rectCollide(14))
-    .alphaDecay(0.02);
-
-  const link = g.append('g').selectAll('line')
-    .data(graph.links).join('line').attr('class', 'link');
-
-  // NOTE: node dragging intentionally disabled
-  const node = g.append('g').selectAll('g')
-    .data(graph.nodes).join('g').attr('class', 'node');
-
-  node.append('rect')
-    .attr('x', d => -d.boxW/2).attr('y', -BOX_H/2)
-    .attr('width', d => d.boxW).attr('height', BOX_H).attr('rx', 7)
-    .attr('fill', '#161921').attr('fill-opacity', 0.98)
-    .attr('stroke', d => colorOf(d)).attr('stroke-width', 1.6);
-  node.append('text').attr('text-anchor', 'middle').attr('dy', '0.34em')
-    .text(d => label(d));
-
-  sim.on('tick', () => {
-    link.attr('x1', d=>d.source.x).attr('y1', d=>d.source.y)
-        .attr('x2', d=>d.target.x).attr('y2', d=>d.target.y);
-    node.attr('transform', d => `translate(${d.x},${d.y})`);
+  const clusters = Object.keys(groups).map(area => {
+    const items = groups[area];
+    const z = ZONE[area] || DEF_ZONE;
+    return { area, items, col: z[0], row: z[1],
+             w: BOX_W + PAD*2,
+             h: TITLE_H + items.length*(BOX_H+V_GAP) + PAD };
   });
 
-  // ---- hover + area filter state ----
-  let hoverId = null, filterArea = 'all';
-  function baseVisible(n) { return filterArea === 'all' || n.area === filterArea; }
-  function refresh() {
-    node.each(function(d) {
-      const active = (hoverId === null) || neighbors.get(hoverId).has(d.id);
-      const dim = !baseVisible(d) || (hoverId !== null && !active);
-      d3.select(this).classed('dim', dim).classed('hovered', d.id === hoverId);
-    });
-    link.each(function(l) {
-      const sId = l.source.id, tId = l.target.id;
-      const touch = (hoverId !== null) && (sId === hoverId || tId === hoverId);
-      const baseOk = filterArea === 'all' ||
-        (graph.nodes[sId] && (l.source.area === filterArea || l.target.area === filterArea));
-      const dim = !baseOk || (hoverId !== null && !touch);
-      d3.select(this).classed('dim', dim).classed('hl', touch);
-    });
-  }
-  node.on('mouseover', (e,d) => { hoverId = d.id; refresh(); })
-      .on('mouseout', () => { hoverId = null; refresh(); });
+  // column widths / row heights -> tidy grid, no overlap
+  const colW = {}, rowH = {};
+  clusters.forEach(c => { colW[c.col] = Math.max(colW[c.col]||0, c.w); rowH[c.row] = Math.max(rowH[c.row]||0, c.h); });
+  const colX = {}; let xacc = 0;
+  Object.keys(colW).map(Number).sort((a,b)=>a-b).forEach(c => { colX[c]=xacc; xacc += colW[c]+COL_GAP; });
+  const rowY = {}; let yacc = 0;
+  Object.keys(rowH).map(Number).sort((a,b)=>a-b).forEach(r => { rowY[r]=yacc; yacc += rowH[r]+ROW_GAP; });
 
+  clusters.forEach(c => {
+    c.x = colX[c.col] + (colW[c.col]-c.w)/2;
+    c.y = rowY[c.row];
+    c.items.forEach((n,i) => { n.x = c.x + c.w/2; n.y = c.y + TITLE_H + i*(BOX_H+V_GAP) + BOX_H/2; });
+  });
+  const fullW = xacc, fullH = yacc;
+
+  // render: cluster panels
+  const panel = g.append('g').selectAll('g.cluster').data(clusters).join('g').attr('class','cluster');
+  panel.append('rect').attr('class','cluster-box')
+    .attr('x',d=>d.x).attr('y',d=>d.y).attr('width',d=>d.w).attr('height',d=>d.h).attr('rx',12);
+  panel.append('text').attr('class','cluster-title')
+    .attr('x',d=>d.x+d.w/2).attr('y',d=>d.y+19).attr('text-anchor','middle')
+    .attr('fill',d=>{ const c=d.items[0]; return c?colorOf(c):'#94a3b8'; })
+    .text(d=>d.area.toUpperCase());
+
+  // render: links (static straight lines between box centres)
+  const link = g.append('g').selectAll('line').data(graph.links).join('line').attr('class','link')
+    .attr('x1',l=>nodeById.get(l.source).x).attr('y1',l=>nodeById.get(l.source).y)
+    .attr('x2',l=>nodeById.get(l.target).x).attr('y2',l=>nodeById.get(l.target).y);
+
+  // render: feature boxes
+  const node = g.append('g').selectAll('g.node').data(graph.nodes).join('g').attr('class','node')
+    .attr('transform', d => `translate(${d.x},${d.y})`);
+  node.append('rect')
+    .attr('x',-BOX_W/2).attr('y',-BOX_H/2).attr('width',BOX_W).attr('height',BOX_H).attr('rx',7)
+    .attr('fill','#11141b').attr('stroke',d=>colorOf(d)).attr('stroke-width',1.6);
+  node.append('text').attr('text-anchor','middle').attr('dy','0.34em').text(d=>label(d));
+
+  // fit whole diagram to viewport
+  const scale = Math.min(W/fullW, H/fullH, 1) * 0.96;
+  svg.call(zoom.transform, d3.zoomIdentity.translate((W-fullW*scale)/2, (H-fullH*scale)/2).scale(scale));
+
+  // ---- hover + area filter ----
+  let hoverId = null, filterArea = 'all';
+  function baseVisible(n){ return filterArea==='all' || n.area===filterArea; }
+  function refresh(){
+    node.each(function(d){
+      const active = (hoverId===null) || neighbors.get(hoverId).has(d.id);
+      d3.select(this).classed('dim', !baseVisible(d) || (hoverId!==null && !active)).classed('hovered', d.id===hoverId);
+    });
+    link.each(function(l){
+      const touch = (hoverId!==null) && (l.source===hoverId || l.target===hoverId);
+      const baseOk = filterArea==='all' || nodeById.get(l.source).area===filterArea || nodeById.get(l.target).area===filterArea;
+      d3.select(this).classed('dim', !baseOk || (hoverId!==null && !touch)).classed('hl', touch);
+    });
+    panel.each(function(c){ d3.select(this).classed('dim', filterArea!=='all' && c.area!==filterArea); });
+  }
+  node.on('mouseover',(e,d)=>{ hoverId=d.id; refresh(); }).on('mouseout',()=>{ hoverId=null; refresh(); });
   document.querySelectorAll('.filter-btn').forEach(b => b.addEventListener('click', () => {
-    document.querySelectorAll('.filter-btn').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.filter-btn').forEach(x=>x.classList.remove('active'));
     b.classList.add('active');
     filterArea = b.dataset.filter;
     refresh();
