@@ -1,7 +1,9 @@
 name: Regenerate from Google Sheets
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:        # manual run from Actions tab (no token needed)
+  schedule:
+    - cron: '0 6 * * *'     # auto-regenerate daily 06:00 UTC from the sheet
   push:
     branches: [main]
     paths:
