@@ -1248,7 +1248,7 @@ def generate_map(features):
 # (Discovery → Date of discovery end; Delivery → Date of delivery).
 # ═══════════════════════════════════════════════════════════════════════════
 
-WEEKLY_WINDOW_DAYS = 30
+WEEKLY_WINDOW_DAYS = {"discovery": 14, "delivery": 30}  # days before completion, per lane
 
 def generate_weekly(features):
     import datetime as _dt
@@ -1263,7 +1263,7 @@ def generate_weekly(features):
             end = _dt.date.fromisoformat(end_iso)
         except Exception:
             return
-        lanes[lane].append({"f": f, "start": end - _dt.timedelta(days=WEEKLY_WINDOW_DAYS), "end": end})
+        lanes[lane].append({"f": f, "start": end - _dt.timedelta(days=WEEKLY_WINDOW_DAYS[lane]), "end": end})
     for f in features:
         if f.get("disc_iso"):    add_bar("discovery", f, f["disc_iso"])
         if f.get("deliver_iso"): add_bar("delivery",  f, f["deliver_iso"])

@@ -590,12 +590,13 @@
   /* ---- Weekly Gantt (Discovery / Delivery lanes) ---- */
   .gantt { --gw: 104px; overflow-x:auto; margin-top:14px; padding-bottom:16px; border:1px solid var(--border); border-radius:14px; }
   .gantt-row { display:flex; align-items:stretch; border-top:1px solid var(--border); }
+  .gantt-row.gantt-deliv { border-top:2px solid rgba(255,255,255,0.14); }
   .gantt-row.gantt-head { border-top:none; }
   .gantt-lane-label { flex:0 0 92px; position:sticky; left:0; z-index:3; background:var(--surface);
                       display:flex; align-items:center; justify-content:center; text-align:center;
                       font-size:11px; font-weight:800; letter-spacing:.6px; }
-  .gantt-lane-label.disc  { color:#fbbf24; }
-  .gantt-lane-label.deliv { color:#4ade80; }
+  .gantt-lane-label.disc  { color:#fbbf24; background:rgba(245,158,11,0.12); box-shadow:inset 3px 0 0 #f59e0b; }
+  .gantt-lane-label.deliv { color:#4ade80; background:rgba(34,197,94,0.12); box-shadow:inset 3px 0 0 #22c55e; }
   .gantt-head .gantt-lane-label { background:var(--surface); }
   .gantt-weeks { display:grid; flex:1; }
   .gw { padding:7px 4px; text-align:center; font-size:10px; font-weight:600; color:var(--muted);
@@ -604,8 +605,8 @@
   .gantt-grid { display:grid; flex:1; gap:5px; padding:9px 0;
                 background-image:linear-gradient(90deg, var(--border) 1px, transparent 1px);
                 background-size:var(--gw) 100%; }
-  .gantt-disc  .gantt-grid { background-color:rgba(245,158,11,0.03); }
-  .gantt-deliv .gantt-grid { background-color:rgba(34,197,94,0.03); }
+  .gantt-disc  .gantt-grid { background-color:rgba(245,158,11,0.07); }
+  .gantt-deliv .gantt-grid { background-color:rgba(34,197,94,0.07); }
   .bar { background:var(--bg); border:1px solid var(--border); border-left:3px solid var(--platform);
          border-radius:7px; padding:5px 9px; margin:0 4px; font-size:11px; font-weight:500; color:#e8eaf0;
          white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; gap:6px;
