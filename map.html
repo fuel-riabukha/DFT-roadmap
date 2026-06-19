@@ -680,32 +680,54 @@ document.addEventListener('DOMContentLoaded', function () {
   };
   const POS = a => TIER[a] || [0.90, 0.55];
 
+  // ---- box sizes (compute BEFORE forces use them) ----
+  const BOX_H = 28;
+  function label(d) { return d.title.length > 30 ? d.title.slice(0,29) + '…' : d.title; }
+  function boxW(d) { return Math.max(64, label(d).length * 6.2 + 22); }
+  graph.nodes.forEach(d => { d.boxW = boxW(d); d.boxH = BOX_H; });
+
+  // ---- rectangular collision: hard-separate overlapping boxes ----
+  function rectCollide(pad) {
+    let nodes;
+    function force() {
+      for (let iter = 0; iter < 3; iter++) {
+        for (let i = 0; i < nodes.length; i++) {
+          for (let j = i + 1; j < nodes.length; j++) {
+            const a = nodes[i], b = nodes[j];
+            let dx = b.x - a.x, dy = b.y - a.y;
+            if (dx === 0 && dy === 0) { dx = Math.random() - 0.5; dy = Math.random() - 0.5; }
+            const ovX = (a.boxW/2 + b.boxW/2 + pad) - Math.abs(dx);
+            const ovY = (a.boxH/2 + b.boxH/2 + pad) - Math.abs(dy);
+            if (ovX > 0 && ovY > 0) {
+              if (ovX < ovY) { const s = (dx < 0 ? -1 : 1) * ovX/2; a.x -= s; b.x += s; }
+              else           { const s = (dy < 0 ? -1 : 1) * ovY/2; a.y -= s; b.y += s; }
+            }
+          }
+        }
+      }
+    }
+    force.initialize = (n) => { nodes = n; };
+    return force;
+  }
+
   const sim = d3.forceSimulation(graph.nodes)
-    .force('link', d3.forceLink(graph.links).id(d => d.id).distance(96).strength(0.10))
-    .force('charge', d3.forceManyBody().strength(-140))
-    .force('x', d3.forceX(d => POS(d.area)[0] * W).strength(0.22))
+    .force('link', d3.forceLink(graph.links).id(d => d.id).distance(120).strength(0.04))
+    .force('x', d3.forceX(d => POS(d.area)[0] * W).strength(0.09))
     .force('y', d3.forceY(d => POS(d.area)[1] * H).strength(0.45))
-    .force('collide', d3.forceCollide().radius(d => d.boxW/2 + 10).strength(0.9));
+    .force('rect', rectCollide(14))
+    .alphaDecay(0.02);
 
   const link = g.append('g').selectAll('line')
     .data(graph.links).join('line').attr('class', 'link');
 
+  // NOTE: node dragging intentionally disabled
   const node = g.append('g').selectAll('g')
-    .data(graph.nodes).join('g').attr('class', 'node')
-    .call(d3.drag()
-      .on('start', (e,d) => { if(!e.active) sim.alphaTarget(0.3).restart(); d.fx=d.x; d.fy=d.y; })
-      .on('drag',  (e,d) => { d.fx=e.x; d.fy=e.y; })
-      .on('end',   (e,d) => { if(!e.active) sim.alphaTarget(0); d.fx=null; d.fy=null; }));
-
-  const BOX_H = 26;
-  function label(d) { return d.title.length > 30 ? d.title.slice(0,29) + '…' : d.title; }
-  function boxW(d) { return Math.max(64, label(d).length * 6.1 + 20); }
-  graph.nodes.forEach(d => { d.boxW = boxW(d); d.boxH = BOX_H; });
+    .data(graph.nodes).join('g').attr('class', 'node');
 
   node.append('rect')
     .attr('x', d => -d.boxW/2).attr('y', -BOX_H/2)
     .attr('width', d => d.boxW).attr('height', BOX_H).attr('rx', 7)
-    .attr('fill', '#161921').attr('fill-opacity', 0.96)
+    .attr('fill', '#161921').attr('fill-opacity', 0.98)
     .attr('stroke', d => colorOf(d)).attr('stroke-width', 1.6);
   node.append('text').attr('text-anchor', 'middle').attr('dy', '0.34em')
     .text(d => label(d));
