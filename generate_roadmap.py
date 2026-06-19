@@ -795,8 +795,8 @@ def read_features(spreadsheet):
             desc_product=clean_desc(row.get("Desc Product", "")),
             desc_client=clean_desc(row.get("Desc Client", "")),
             marketing=clean_bool(row.get("Is significant for separate marketing release?", False)),
-            pilot_date=fmt_date(row.get("Pilot date", "") or ""),
-            rollout_date=fmt_date(row.get("Full rollout date", "") or ""))
+            pilot_date="",  # planned features: no separate pilot milestone
+            rollout_date=fmt_date(row.get("Pilot date") or row.get("Full rollout date", "")))  # Pilot date = release date
 
     return features
 
