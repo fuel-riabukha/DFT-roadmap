@@ -1248,7 +1248,7 @@ def generate_map(features):
 # (Discovery → Date of discovery end; Delivery → Date of delivery).
 # ═══════════════════════════════════════════════════════════════════════════
 
-WEEKLY_WINDOW_DAYS = {"discovery": 14, "delivery": 30}  # days before completion, per lane
+WEEKLY_WINDOW_DAYS = {"discovery": 7, "delivery": 30}  # days before completion, per lane (discovery=1 week, delivery~4 weeks)
 
 def generate_weekly(features):
     import datetime as _dt
