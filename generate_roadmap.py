@@ -1263,7 +1263,9 @@ def generate_weekly(features):
             end = _dt.date.fromisoformat(end_iso)
         except Exception:
             return
-        lanes[lane].append({"f": f, "start": end - _dt.timedelta(days=WEEKLY_WINDOW_DAYS[lane]), "end": end})
+        span = max(1, round(WEEKLY_WINDOW_DAYS[lane] / 7))   # whole weeks: discovery 2, delivery 4
+        endMon = monday(end)
+        lanes[lane].append({"f": f, "startMon": endMon - _dt.timedelta(weeks=span - 1), "endMon": endMon})
     for f in features:
         if f.get("disc_iso"):    add_bar("discovery", f, f["disc_iso"])
         if f.get("deliver_iso"): add_bar("delivery",  f, f["deliver_iso"])
@@ -1274,8 +1276,8 @@ def generate_weekly(features):
                        '<div class="gantt-empty">No dated features yet — add discovery/delivery dates in the sheet.</div>'
                        '</div><!-- /weekly -->')
     else:
-        minMon = monday(min(b["start"] for b in all_bars))
-        maxMon = monday(max(b["end"] for b in all_bars))
+        minMon = min(b["startMon"] for b in all_bars)
+        maxMon = max(b["endMon"] for b in all_bars)
         weeks = []
         cur = minMon
         while cur <= maxMon:
@@ -1285,11 +1287,11 @@ def generate_weekly(features):
         def widx(d): return idx_of[monday(d)]
 
         def pack(bars):
-            bars = sorted(bars, key=lambda b: (widx(b["start"]), widx(b["end"])))
+            bars = sorted(bars, key=lambda b: (idx_of[b["startMon"]], idx_of[b["endMon"]]))
             row_end = []
             placed = []
             for b in bars:
-                s, e = widx(b["start"]), widx(b["end"])
+                s, e = idx_of[b["startMon"]], idx_of[b["endMon"]]
                 r = None
                 for ri in range(len(row_end)):
                     if row_end[ri] < s:
