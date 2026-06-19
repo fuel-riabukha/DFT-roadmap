@@ -637,7 +637,7 @@ def read_features(spreadsheet):
 
     def add(title_raw, area, status, disc_date, deliver_date, internal, links,
              sheet_status="", desc_gtm="", desc_product="", desc_client="", marketing=False,
-             pilot_date="", rollout_date="", stage="", responsible="", connected="", deliver_iso=""):
+             pilot_date="", rollout_date="", stage="", responsible="", connected="", deliver_iso="", disc_iso=""):
         title = TITLE_MAP.get(title_raw, title_raw)
         if title == "__SKIP__" or not title or title == "nan":
             return
@@ -664,6 +664,7 @@ def read_features(spreadsheet):
             "responsible": clean_desc(responsible),
             "connected": clean_desc(connected),
             "deliver_iso": deliver_iso,
+            "disc_iso": disc_iso,
         })
 
     # ── Shipped (fully delivered features) — read FIRST so past dates win ─
@@ -685,6 +686,7 @@ def read_features(spreadsheet):
             area=str(row.get("Area", "Platform foundations")).strip(),
             connected=row.get("Connected features", "") or row.get("Blocking features", ""),
             deliver_iso=iso_date(row.get("Date of delivery", "")),
+            disc_iso=iso_date(row.get("Date of discovery end", "")),
             status="In Delivery",
             disc_date=fmt_date(row.get("Date of discovery end", "")),
             deliver_date=deliver,
@@ -718,6 +720,7 @@ def read_features(spreadsheet):
             area=str(row.get("Area", "Platform foundations")).strip(),
             connected=row.get("Connected features", "") or row.get("Blocking features", ""),
             deliver_iso=iso_date(row.get("Date of delivery", "")),
+            disc_iso=iso_date(row.get("Date of discovery end", "")),
             status="In Delivery",
             disc_date=fmt_date(row.get("Date of discovery end", "")),
             deliver_date=deliver,
@@ -746,6 +749,7 @@ def read_features(spreadsheet):
             area=str(row.get("Area", "Platform foundations")).strip(),
             connected=row.get("Connected features", "") or row.get("Blocking features", ""),
             deliver_iso=iso_date(row.get("Date of delivery", "")),
+            disc_iso=iso_date(row.get("Date of discovery end", "")),
             status="Ready to Deliver",
             disc_date=fmt_date(row.get("Date of discovery end", "")),
             deliver_date=deliver,
@@ -771,6 +775,7 @@ def read_features(spreadsheet):
             area=str(row.get("Area", "Platform foundations")).strip(),
             connected=row.get("Connected features", "") or row.get("Blocking features", ""),
             deliver_iso=iso_date(row.get("Date of delivery", "")),
+            disc_iso=iso_date(row.get("Date of discovery end", "")),
             status="Ready to Deliver",
             disc_date=disc,
             deliver_date=deliv,
@@ -802,6 +807,7 @@ def read_features(spreadsheet):
             area=str(row.get("Area", "Platform foundations")).strip(),
             connected=row.get("Connected features", "") or row.get("Blocking features", ""),
             deliver_iso=iso_date(row.get("Date of delivery", "")),
+            disc_iso=iso_date(row.get("Date of discovery end", "")),
             status=status,
             disc_date=disc,
             deliver_date=deliv,
@@ -829,6 +835,7 @@ def read_features(spreadsheet):
             area=str(row.get("Area", "Platform foundations")).strip(),
             connected=row.get("Connected features", "") or row.get("Blocking features", ""),
             deliver_iso=iso_date(row.get("Date of delivery", "")),
+            disc_iso=iso_date(row.get("Date of discovery end", "")),
             status="Planned",
             disc_date=disc,
             deliver_date=deliv,
@@ -1236,72 +1243,89 @@ def generate_map(features):
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# WEEKLY PLANNING (columns = ISO weeks by delivery date, cards grouped by stage)
+# WEEKLY PLANNING — Discovery / Delivery Gantt
+# A feature occupies a lane for the 30 days before its planned completion date
+# (Discovery → Date of discovery end; Delivery → Date of delivery).
 # ═══════════════════════════════════════════════════════════════════════════
 
-WEEKLY_STAGES = [
-    ("planned",   "Planned",            "#6366f1"),
-    ("discovery", "Discovery",          "#f59e0b"),
-    ("ready",     "Ready for delivery", "#eab308"),
-    ("delivery",  "In delivery",        "#22c55e"),
-    ("shipped",   "Shipped",            "#94a3b8"),
-]
+WEEKLY_WINDOW_DAYS = 30
 
 def generate_weekly(features):
     import datetime as _dt
     from pathlib import Path as _P
 
-    weeks = {}     # monday(date) -> [features]
-    nodate = []
+    def monday(d):
+        return d - _dt.timedelta(days=d.weekday())
+
+    lanes = {"discovery": [], "delivery": []}
+    def add_bar(lane, f, end_iso):
+        try:
+            end = _dt.date.fromisoformat(end_iso)
+        except Exception:
+            return
+        lanes[lane].append({"f": f, "start": end - _dt.timedelta(days=WEEKLY_WINDOW_DAYS), "end": end})
     for f in features:
-        iso = f.get("deliver_iso")
-        d = None
-        if iso:
-            try:
-                d = _dt.date.fromisoformat(iso)
-            except Exception:
-                d = None
-        if d:
-            monday = d - _dt.timedelta(days=d.weekday())
-            weeks.setdefault(monday, []).append(f)
-        else:
-            nodate.append(f)
+        if f.get("disc_iso"):    add_bar("discovery", f, f["disc_iso"])
+        if f.get("deliver_iso"): add_bar("delivery",  f, f["deliver_iso"])
 
-    def card(f):
-        cv, _ = AREA_CONFIG.get(f["area"], ("--platform", f["area"]))
-        return (f'<div class="wk-card" data-area="{esc(f["area"])}" style="border-left-color:var({cv})">'
-                f'<span class="wk-dot" style="background:var({cv})"></span>{esc(f["title"])}</div>')
+    all_bars = lanes["discovery"] + lanes["delivery"]
+    if not all_bars:
+        weekly_html = ('<div class="weekly" id="weeklyView">'
+                       '<div class="gantt-empty">No dated features yet — add discovery/delivery dates in the sheet.</div>'
+                       '</div><!-- /weekly -->')
+    else:
+        minMon = monday(min(b["start"] for b in all_bars))
+        maxMon = monday(max(b["end"] for b in all_bars))
+        weeks = []
+        cur = minMon
+        while cur <= maxMon:
+            weeks.append(cur); cur += _dt.timedelta(days=7)
+        idx_of = {m: i for i, m in enumerate(weeks)}
+        N = len(weeks)
+        def widx(d): return idx_of[monday(d)]
 
-    def col_html(title, sub, feats):
-        by = {k: [] for k, _, _ in WEEKLY_STAGES}
-        for f in feats:
-            by[board_col_of(f)].append(f)
-        sections = []
-        for key, label, color in WEEKLY_STAGES:
-            items = by[key]
-            if not items:
-                continue
-            cards = "\n".join(card(f) for f in sorted(items, key=lambda x: x["title"]))
-            sections.append(
-                f'<div class="wk-stage"><div class="wk-stage-h"><span class="wk-sd" style="background:{color}"></span>'
-                f'{label} <span class="wk-n">{len(items)}</span></div>{cards}</div>')
-        body = "\n".join(sections) if sections else '<div class="wk-empty">—</div>'
-        return (f'<div class="wk-col"><div class="wk-col-h">{title}<span class="wk-col-sub">{sub}</span></div>'
-                f'{body}</div>')
+        def pack(bars):
+            bars = sorted(bars, key=lambda b: (widx(b["start"]), widx(b["end"])))
+            row_end = []
+            placed = []
+            for b in bars:
+                s, e = widx(b["start"]), widx(b["end"])
+                r = None
+                for ri in range(len(row_end)):
+                    if row_end[ri] < s:
+                        r = ri; row_end[ri] = e; break
+                if r is None:
+                    row_end.append(e); r = len(row_end) - 1
+                placed.append((b, s, e, r))
+            return placed, max(1, len(row_end))
 
-    cols = []
-    for monday in sorted(weeks.keys()):
-        sunday = monday + _dt.timedelta(days=6)
-        if monday.month == sunday.month:
-            title = f'{monday.strftime("%-d")}–{sunday.strftime("%-d %b")}'
-        else:
-            title = f'{monday.strftime("%-d %b")}–{sunday.strftime("%-d %b")}'
-        sub = f'W{monday.isocalendar()[1]} · {monday.year}'
-        cols.append(col_html(title, sub, weeks[monday]))
-    if nodate:
-        cols.append(col_html("No date", "TBD", nodate))
+        def bar_html(b, s, e, r):
+            f = b["f"]; cv, _ = AREA_CONFIG.get(f["area"], ("--platform", f["area"]))
+            return (f'<div class="bar" data-area="{esc(f["area"])}" title="{esc(f["title"])}" '
+                    f'style="grid-column:{s+1}/{e+2};grid-row:{r+1};border-left-color:var({cv})">'
+                    f'<span class="bar-dot" style="background:var({cv})"></span>{esc(f["title"])}</div>')
 
-    weekly_html = '<div class="weekly" id="weeklyView">\n' + "\n".join(cols) + '\n</div><!-- /weekly -->'
+        def grid_html(bars):
+            placed, nrows = pack(bars)
+            cells = "".join(bar_html(b, s, e, r) for (b, s, e, r) in placed)
+            return (f'<div class="gantt-grid" style="grid-template-columns:repeat({N},var(--gw));'
+                    f'grid-template-rows:repeat({nrows},auto)">{cells}</div>')
+
+        heads = []
+        for m in weeks:
+            su = m + _dt.timedelta(days=6)
+            lbl = (f'{m.strftime("%-d")}–{su.strftime("%-d %b")}' if m.month == su.month
+                   else f'{m.strftime("%-d %b")}–{su.strftime("%-d %b")}')
+            heads.append(f'<div class="gw">{lbl}<small>W{m.isocalendar()[1]}</small></div>')
+        head_html = f'<div class="gantt-weeks" style="grid-template-columns:repeat({N},var(--gw))">{"".join(heads)}</div>'
+
+        weekly_html = (
+            '<div class="weekly" id="weeklyView"><div class="gantt">'
+            f'<div class="gantt-row gantt-head"><div class="gantt-lane-label"></div>{head_html}</div>'
+            f'<div class="gantt-row gantt-disc"><div class="gantt-lane-label disc">DISCOVERY</div>{grid_html(lanes["discovery"])}</div>'
+            f'<div class="gantt-row gantt-deliv"><div class="gantt-lane-label deliv">DELIVERY</div>{grid_html(lanes["delivery"])}</div>'
+            '</div></div><!-- /weekly -->'
+        )
 
     base_path = _P(__file__).parent / "weekly.html"
     if not base_path.exists():
@@ -1313,8 +1337,7 @@ def generate_weekly(features):
     base = base[:sidx] + weekly_html + base[eidx:]
     base = re.sub(r'Updated \w+ \d{4}', f'Updated {datetime.now().strftime("%B %Y")}', base)
     open(base_path, "w", encoding="utf-8").write(base)
-    print(f"✓  Saved weekly → {base_path}  weeks={len(weeks)} nodate={len(nodate)}")
-
+    print(f"✓  Saved weekly → {base_path}  discovery={len(lanes['discovery'])} delivery={len(lanes['delivery'])}")
 
 def generate(features, output_path):
     import datetime as _dt

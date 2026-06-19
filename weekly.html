@@ -587,6 +587,31 @@
   .wk-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; margin-top:5px; }
   .wk-empty { font-size:11px; color:var(--muted); opacity:.6; }
 
+  /* ---- Weekly Gantt (Discovery / Delivery lanes) ---- */
+  .gantt { --gw: 104px; overflow-x:auto; margin-top:14px; padding-bottom:16px; border:1px solid var(--border); border-radius:14px; }
+  .gantt-row { display:flex; align-items:stretch; border-top:1px solid var(--border); }
+  .gantt-row.gantt-head { border-top:none; }
+  .gantt-lane-label { flex:0 0 92px; position:sticky; left:0; z-index:3; background:var(--surface);
+                      display:flex; align-items:center; justify-content:center; text-align:center;
+                      font-size:11px; font-weight:800; letter-spacing:.6px; }
+  .gantt-lane-label.disc  { color:#fbbf24; }
+  .gantt-lane-label.deliv { color:#4ade80; }
+  .gantt-head .gantt-lane-label { background:var(--surface); }
+  .gantt-weeks { display:grid; flex:1; }
+  .gw { padding:7px 4px; text-align:center; font-size:10px; font-weight:600; color:var(--muted);
+        border-left:1px solid var(--border); display:flex; flex-direction:column; gap:1px; }
+  .gw small { font-size:8.5px; opacity:.7; }
+  .gantt-grid { display:grid; flex:1; gap:5px; padding:9px 0;
+                background-image:linear-gradient(90deg, var(--border) 1px, transparent 1px);
+                background-size:var(--gw) 100%; }
+  .gantt-disc  .gantt-grid { background-color:rgba(245,158,11,0.03); }
+  .gantt-deliv .gantt-grid { background-color:rgba(34,197,94,0.03); }
+  .bar { background:var(--bg); border:1px solid var(--border); border-left:3px solid var(--platform);
+         border-radius:7px; padding:5px 9px; margin:0 4px; font-size:11px; font-weight:500; color:#e8eaf0;
+         white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; gap:6px;
+         min-width:0; align-self:center; }
+  .bar-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+  .gantt-empty { padding:40px; text-align:center; color:var(--muted); font-size:13px; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
@@ -634,7 +659,7 @@ document.addEventListener('DOMContentLoaded', function () {
     btns.forEach(x => x.classList.remove('active'));
     b.classList.add('active');
     const f = b.dataset.filter;
-    document.querySelectorAll('.wk-card').forEach(c => {
+    document.querySelectorAll('.bar').forEach(c => {
       c.style.display = (f === 'all' || c.dataset.area === f) ? '' : 'none';
     });
   }));
