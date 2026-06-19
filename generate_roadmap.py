@@ -1,4 +1,4 @@
-# build: DFT roadmap first generation trigger 2026-06-18
+# build: DFT roadmap regenerate trigger 2026-06-19T12:30
 #!/usr/bin/env python3
 """
 Fuel Finance Roadmap Generator
