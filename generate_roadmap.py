@@ -608,7 +608,7 @@ def read_features(spreadsheet):
 
     def add(title_raw, area, status, disc_date, deliver_date, internal, links,
              sheet_status="", desc_gtm="", desc_product="", desc_client="", marketing=False,
-             pilot_date="", rollout_date="", stage="", responsible=""):
+             pilot_date="", rollout_date="", stage="", responsible="", connected=""):
         title = TITLE_MAP.get(title_raw, title_raw)
         if title == "__SKIP__" or not title or title == "nan":
             return
@@ -633,6 +633,7 @@ def read_features(spreadsheet):
             "rollout_date": rollout_date,
             "stage": clean_desc(stage),
             "responsible": clean_desc(responsible),
+            "connected": clean_desc(connected),
         })
 
     # ── Shipped (fully delivered features) — read FIRST so past dates win ─
@@ -652,6 +653,7 @@ def read_features(spreadsheet):
         sheet_status = str(row.get("status", "")).strip() or "Fully shipped"
         add(epic,
             area=str(row.get("Area", "Platform foundations")).strip(),
+            connected=row.get("Connected features", "") or row.get("Blocking features", ""),
             status="In Delivery",
             disc_date=fmt_date(row.get("Date of discovery end", "")),
             deliver_date=deliver,
@@ -683,6 +685,7 @@ def read_features(spreadsheet):
         sheet_status = str(row.get("status", "")).strip()
         add(epic,
             area=str(row.get("Area", "Platform foundations")).strip(),
+            connected=row.get("Connected features", "") or row.get("Blocking features", ""),
             status="In Delivery",
             disc_date=fmt_date(row.get("Date of discovery end", "")),
             deliver_date=deliver,
@@ -709,6 +712,7 @@ def read_features(spreadsheet):
         )
         add(epic,
             area=str(row.get("Area", "Platform foundations")).strip(),
+            connected=row.get("Connected features", "") or row.get("Blocking features", ""),
             status="Ready to Deliver",
             disc_date=fmt_date(row.get("Date of discovery end", "")),
             deliver_date=deliver,
@@ -732,6 +736,7 @@ def read_features(spreadsheet):
         deliv = fmt_date(row.get("Date of delivery") or row.get("Expected month of delivery") or row.get("Expected month of delivery (Oleksandr's gestimation)", ""))
         add(epic,
             area=str(row.get("Area", "Platform foundations")).strip(),
+            connected=row.get("Connected features", "") or row.get("Blocking features", ""),
             status="Ready to Deliver",
             disc_date=disc,
             deliver_date=deliv,
@@ -761,6 +766,7 @@ def read_features(spreadsheet):
 
         add(epic,
             area=str(row.get("Area", "Platform foundations")).strip(),
+            connected=row.get("Connected features", "") or row.get("Blocking features", ""),
             status=status,
             disc_date=disc,
             deliver_date=deliv,
@@ -786,6 +792,7 @@ def read_features(spreadsheet):
         deliv = fmt_date(row.get("Date of delivery") or row.get("Expected month for the delivery", ""))
         add(feat,
             area=str(row.get("Area", "Platform foundations")).strip(),
+            connected=row.get("Connected features", "") or row.get("Blocking features", ""),
             status="Planned",
             disc_date=disc,
             deliver_date=deliv,
@@ -1124,6 +1131,74 @@ def generate_board(features):
     print(f"✓  Saved board → {base_path}  " + str({k: len(v) for k, v in cols.items()}))
 
 
+# ═══════════════════════════════════════════════════════════════════════════
+# PRODUCT MAP (graph of features + connections) — map.html
+# ═══════════════════════════════════════════════════════════════════════════
+
+def _norm_title(s):
+    return re.sub(r"\s+", " ", str(s or "").strip().lower())
+
+def build_graph(features):
+    """Build {nodes, links} from features + their 'Connected features' column."""
+    nodes = []
+    title_index = {}
+    norm_titles = []
+    for i, f in enumerate(features):
+        color_var, _ = AREA_CONFIG.get(f["area"], ("--platform", f["area"]))
+        nodes.append({"id": i, "title": f["title"], "area": f["area"], "color": color_var})
+        nt = _norm_title(f["title"])
+        title_index[nt] = i
+        norm_titles.append((nt, i))
+
+    def resolve(token):
+        t = _norm_title(token)
+        if not t or len(t) < 3:
+            return None
+        if t in title_index:
+            return title_index[t]
+        cands = [(len(nt), i) for nt, i in norm_titles if t in nt]   # token is substring of a title
+        if cands:
+            cands.sort()        # shortest (most specific) title wins
+            return cands[0][1]
+        return None
+
+    links = set()
+    for i, f in enumerate(features):
+        raw = f.get("connected", "")
+        if not raw or str(raw).strip().lower() in ("", "nan", "none"):
+            continue
+        for tok in re.split(r"[,;\n]", str(raw)):
+            tok = tok.strip()
+            if not tok:
+                continue
+            j = resolve(tok)
+            if j is not None and j != i:
+                links.add(tuple(sorted((i, j))))
+    links = [{"source": a, "target": b} for a, b in sorted(links)]
+    return {"nodes": nodes, "links": links}
+
+def generate_map(features):
+    from pathlib import Path as _P
+    import json
+    graph = build_graph(features)
+    base_path = _P(__file__).parent / "map.html"
+    if not base_path.exists():
+        print("  ⚠ map.html template not found — skipping map")
+        return
+    base = open(base_path, encoding="utf-8").read()
+    start_tag = '<script id="graphData" type="application/json">'
+    if start_tag not in base:
+        print("  ⚠ graphData marker not found in map.html — skipping map")
+        return
+    s = base.index(start_tag) + len(start_tag)
+    e = base.index('</script>', s)
+    payload = json.dumps(graph, ensure_ascii=False)
+    base = base[:s] + "\n" + payload + "\n" + base[e:]
+    base = re.sub(r'Updated \w+ \d{4}', f'Updated {datetime.now().strftime("%B %Y")}', base)
+    open(base_path, "w", encoding="utf-8").write(base)
+    print(f"✓  Saved map → {base_path}  nodes={len(graph['nodes'])} links={len(graph['links'])}")
+
+
 def generate(features, output_path):
     import datetime as _dt
     _today = _dt.date.today()
@@ -1268,6 +1343,7 @@ def main():
     output = Path(args.output)
     generate(features, output)
     generate_board(features)
+    generate_map(features)
 
 if __name__ == "__main__":
     main()
