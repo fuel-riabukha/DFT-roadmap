@@ -539,6 +539,33 @@ def fmt_date(val):
     except Exception:
         return None
 
+def iso_date(val):
+    """Return 'YYYY-MM-DD' for a delivery cell (serial number or string), else ''."""
+    import datetime as _dt
+    if val is None or val == "" or val == 0:
+        return ""
+    if isinstance(val, (int, float)):
+        try:
+            serial = int(val)
+            if serial < 40000 or serial > 60000:
+                return ""
+            return (_dt.date(1899, 12, 30) + _dt.timedelta(days=serial)).isoformat()
+        except Exception:
+            return ""
+    sv = str(val).strip()
+    if not sv or sv.lower() in ("nan", "nat", "none", "0"):
+        return ""
+    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d", "%m/%d/%Y", "%d.%m.%Y", "%d/%m/%Y", "%m/%d/%Y %H:%M:%S"):
+        try:
+            return _dt.datetime.strptime(sv, fmt).date().isoformat()
+        except ValueError:
+            continue
+    try:
+        import pandas as _pd
+        return _pd.to_datetime(sv).date().isoformat()
+    except Exception:
+        return ""
+
 def get_col(deliver_str):
     """Map delivery date string → column key."""
     if not deliver_str:
@@ -610,7 +637,7 @@ def read_features(spreadsheet):
 
     def add(title_raw, area, status, disc_date, deliver_date, internal, links,
              sheet_status="", desc_gtm="", desc_product="", desc_client="", marketing=False,
-             pilot_date="", rollout_date="", stage="", responsible="", connected=""):
+             pilot_date="", rollout_date="", stage="", responsible="", connected="", deliver_iso=""):
         title = TITLE_MAP.get(title_raw, title_raw)
         if title == "__SKIP__" or not title or title == "nan":
             return
@@ -636,6 +663,7 @@ def read_features(spreadsheet):
             "stage": clean_desc(stage),
             "responsible": clean_desc(responsible),
             "connected": clean_desc(connected),
+            "deliver_iso": deliver_iso,
         })
 
     # ── Shipped (fully delivered features) — read FIRST so past dates win ─
@@ -656,6 +684,7 @@ def read_features(spreadsheet):
         add(epic,
             area=str(row.get("Area", "Platform foundations")).strip(),
             connected=row.get("Connected features", "") or row.get("Blocking features", ""),
+            deliver_iso=iso_date(row.get("Date of delivery", "")),
             status="In Delivery",
             disc_date=fmt_date(row.get("Date of discovery end", "")),
             deliver_date=deliver,
@@ -688,6 +717,7 @@ def read_features(spreadsheet):
         add(epic,
             area=str(row.get("Area", "Platform foundations")).strip(),
             connected=row.get("Connected features", "") or row.get("Blocking features", ""),
+            deliver_iso=iso_date(row.get("Date of delivery", "")),
             status="In Delivery",
             disc_date=fmt_date(row.get("Date of discovery end", "")),
             deliver_date=deliver,
@@ -715,6 +745,7 @@ def read_features(spreadsheet):
         add(epic,
             area=str(row.get("Area", "Platform foundations")).strip(),
             connected=row.get("Connected features", "") or row.get("Blocking features", ""),
+            deliver_iso=iso_date(row.get("Date of delivery", "")),
             status="Ready to Deliver",
             disc_date=fmt_date(row.get("Date of discovery end", "")),
             deliver_date=deliver,
@@ -739,6 +770,7 @@ def read_features(spreadsheet):
         add(epic,
             area=str(row.get("Area", "Platform foundations")).strip(),
             connected=row.get("Connected features", "") or row.get("Blocking features", ""),
+            deliver_iso=iso_date(row.get("Date of delivery", "")),
             status="Ready to Deliver",
             disc_date=disc,
             deliver_date=deliv,
@@ -769,6 +801,7 @@ def read_features(spreadsheet):
         add(epic,
             area=str(row.get("Area", "Platform foundations")).strip(),
             connected=row.get("Connected features", "") or row.get("Blocking features", ""),
+            deliver_iso=iso_date(row.get("Date of delivery", "")),
             status=status,
             disc_date=disc,
             deliver_date=deliv,
@@ -795,6 +828,7 @@ def read_features(spreadsheet):
         add(feat,
             area=str(row.get("Area", "Platform foundations")).strip(),
             connected=row.get("Connected features", "") or row.get("Blocking features", ""),
+            deliver_iso=iso_date(row.get("Date of delivery", "")),
             status="Planned",
             disc_date=disc,
             deliver_date=deliv,
@@ -1201,6 +1235,87 @@ def generate_map(features):
     print(f"✓  Saved map → {base_path}  nodes={len(graph['nodes'])} links={len(graph['links'])}")
 
 
+# ═══════════════════════════════════════════════════════════════════════════
+# WEEKLY PLANNING (columns = ISO weeks by delivery date, cards grouped by stage)
+# ═══════════════════════════════════════════════════════════════════════════
+
+WEEKLY_STAGES = [
+    ("planned",   "Planned",            "#6366f1"),
+    ("discovery", "Discovery",          "#f59e0b"),
+    ("ready",     "Ready for delivery", "#eab308"),
+    ("delivery",  "In delivery",        "#22c55e"),
+    ("shipped",   "Shipped",            "#94a3b8"),
+]
+
+def generate_weekly(features):
+    import datetime as _dt
+    from pathlib import Path as _P
+
+    weeks = {}     # monday(date) -> [features]
+    nodate = []
+    for f in features:
+        iso = f.get("deliver_iso")
+        d = None
+        if iso:
+            try:
+                d = _dt.date.fromisoformat(iso)
+            except Exception:
+                d = None
+        if d:
+            monday = d - _dt.timedelta(days=d.weekday())
+            weeks.setdefault(monday, []).append(f)
+        else:
+            nodate.append(f)
+
+    def card(f):
+        cv, _ = AREA_CONFIG.get(f["area"], ("--platform", f["area"]))
+        return (f'<div class="wk-card" data-area="{esc(f["area"])}" style="border-left-color:var({cv})">'
+                f'<span class="wk-dot" style="background:var({cv})"></span>{esc(f["title"])}</div>')
+
+    def col_html(title, sub, feats):
+        by = {k: [] for k, _, _ in WEEKLY_STAGES}
+        for f in feats:
+            by[board_col_of(f)].append(f)
+        sections = []
+        for key, label, color in WEEKLY_STAGES:
+            items = by[key]
+            if not items:
+                continue
+            cards = "\n".join(card(f) for f in sorted(items, key=lambda x: x["title"]))
+            sections.append(
+                f'<div class="wk-stage"><div class="wk-stage-h"><span class="wk-sd" style="background:{color}"></span>'
+                f'{label} <span class="wk-n">{len(items)}</span></div>{cards}</div>')
+        body = "\n".join(sections) if sections else '<div class="wk-empty">—</div>'
+        return (f'<div class="wk-col"><div class="wk-col-h">{title}<span class="wk-col-sub">{sub}</span></div>'
+                f'{body}</div>')
+
+    cols = []
+    for monday in sorted(weeks.keys()):
+        sunday = monday + _dt.timedelta(days=6)
+        if monday.month == sunday.month:
+            title = f'{monday.strftime("%-d")}–{sunday.strftime("%-d %b")}'
+        else:
+            title = f'{monday.strftime("%-d %b")}–{sunday.strftime("%-d %b")}'
+        sub = f'W{monday.isocalendar()[1]} · {monday.year}'
+        cols.append(col_html(title, sub, weeks[monday]))
+    if nodate:
+        cols.append(col_html("No date", "TBD", nodate))
+
+    weekly_html = '<div class="weekly" id="weeklyView">\n' + "\n".join(cols) + '\n</div><!-- /weekly -->'
+
+    base_path = _P(__file__).parent / "weekly.html"
+    if not base_path.exists():
+        print("  ⚠ weekly.html template not found — skipping weekly")
+        return
+    base = open(base_path, encoding="utf-8").read()
+    sidx = base.index('<div class="weekly" id="weeklyView">')
+    eidx = base.index('</div><!-- /weekly -->') + len('</div><!-- /weekly -->')
+    base = base[:sidx] + weekly_html + base[eidx:]
+    base = re.sub(r'Updated \w+ \d{4}', f'Updated {datetime.now().strftime("%B %Y")}', base)
+    open(base_path, "w", encoding="utf-8").write(base)
+    print(f"✓  Saved weekly → {base_path}  weeks={len(weeks)} nodate={len(nodate)}")
+
+
 def generate(features, output_path):
     import datetime as _dt
     _today = _dt.date.today()
@@ -1346,6 +1461,7 @@ def main():
     generate(features, output)
     generate_board(features)
     generate_map(features)
+    generate_weekly(features)
 
 if __name__ == "__main__":
     main()
