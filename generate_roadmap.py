@@ -647,7 +647,7 @@ def read_features(spreadsheet):
         add(epic,
             area=str(row.get("Area", "Platform foundations")).strip(),
             status="In Delivery",
-            disc_date=None,
+            disc_date=fmt_date(row.get("Date of discovery end", "")),
             deliver_date=deliver,
             internal=internal,
             links=get_links(row),
@@ -678,7 +678,7 @@ def read_features(spreadsheet):
         add(epic,
             area=str(row.get("Area", "Platform foundations")).strip(),
             status="In Delivery",
-            disc_date=None,
+            disc_date=fmt_date(row.get("Date of discovery end", "")),
             deliver_date=deliver,
             internal=internal,
             links=get_links(row),
@@ -704,7 +704,7 @@ def read_features(spreadsheet):
         add(epic,
             area=str(row.get("Area", "Platform foundations")).strip(),
             status="Ready to Deliver",
-            disc_date=None,
+            disc_date=fmt_date(row.get("Date of discovery end", "")),
             deliver_date=deliver,
             internal=internal,
             links=get_links(row),
@@ -984,6 +984,20 @@ def _is_overdue(date_str):
     today_m = _dt.date.today().replace(day=1)
     return d < today_m
 
+def _date_state(date_str):
+    """Classify a 'Mon YYYY' milestone: done / now / planned / tbd."""
+    import datetime as _dt
+    if not date_str or str(date_str).strip().lower() in ("", "nan", "none"):
+        return "tbd"
+    try:
+        d = _dt.datetime.strptime(str(date_str), "%b %Y").date().replace(day=1)
+    except Exception:
+        return "tbd"
+    cur = _dt.date.today().replace(day=1)
+    if d < cur: return "done"
+    if d == cur: return "now"
+    return "planned"
+
 def build_board_card(f):
     area = f["area"]
     color_var, area_label = AREA_CONFIG.get(area, ("--platform", area))
@@ -1023,12 +1037,29 @@ def build_board_card(f):
         if v:
             desc_rows.append(f'<div class="md-desc"><h4>{lbl}</h4><p>{esc(v)}</p></div>')
     desc_html = "".join(desc_rows) or '<div class="md-empty">No description in the sheet yet.</div>'
+
+    # ---- planned-date timeline: Discovery -> Delivery -> (Pilot) -> Release ----
+    phases = [("Discovery", f.get("disc_date")), ("Delivery", f.get("deliver_date"))]
+    if f.get("pilot_date") and str(f.get("pilot_date")).strip().lower() not in ("", "nan", "none"):
+        phases.append(("Pilot", f.get("pilot_date")))
+    phases.append(("Release", f.get("rollout_date")))
+    cells = []
+    for _lbl, _dv in phases:
+        _st = _date_state(_dv)
+        _dt_txt = esc(_dv) if (_dv and str(_dv).strip().lower() not in ("", "nan", "none")) else "TBD"
+        cells.append(
+            f'<div class="md-phase {_st}"><div class="md-phase-dot"></div>'
+            f'<div class="md-phase-label">{_lbl}</div>'
+            f'<div class="md-phase-date">{_dt_txt}</div></div>'
+        )
+    timeline_html = f'<div class="md-timeline-label">Planned timeline</div><div class="md-timeline">{"".join(cells)}</div>'
+
     link_items = []
     for (label, css, url) in (f.get("links") or []):
         link_items.append(f'<a class="md-link" href="{esc(url)}" target="_blank" rel="noopener">{esc(label)} ↗</a>')
     links_html = (f'<div class="md-links-label">Documents</div><div class="md-links">{"".join(link_items)}</div>'
                   if link_items else '<div class="md-links-label">Documents</div><div class="md-empty">No linked documents yet.</div>')
-    detail_html = f'<div class="bcard-detail" hidden>{desc_html}{links_html}</div>'
+    detail_html = f'<div class="bcard-detail" hidden>{timeline_html}{desc_html}{links_html}</div>'
 
     return (
         f'      <div class="bcard{over_cls}" data-area="{esc(area)}"{mkt_attr}{over_attr} style="border-left-color:var({color_var})">\n'
