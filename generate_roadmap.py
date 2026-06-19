@@ -441,6 +441,8 @@ AREA_CONFIG = {
     "Custom artifacts":          ("--artifacts",    "Custom artifacts"),
     "Slack-first interface":     ("--slack",        "Slack-first"),
     "Cross-cutting concerns":    ("--crosscut",     "Cross-cutting"),
+    "AI Dev Acceleration":       ("--aidev",        "AI Dev Acceleration"),
+    "Documentation Tool":        ("--docs",         "Documentation Tool"),
 }
 
 # Normalize sheet area values that differ from AREA_CONFIG keys.
