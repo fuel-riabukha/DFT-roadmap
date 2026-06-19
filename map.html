@@ -584,9 +584,10 @@
   #mapSvg:active { cursor:grabbing; }
   .link { stroke:#475569; stroke-opacity:0.35; stroke-width:1.2px; transition:stroke-opacity .15s, stroke .15s; }
   .link.hl { stroke-opacity:0.95; stroke-width:2px; }
-  .node circle { stroke:#0d0f14; stroke-width:1.5px; cursor:pointer; transition:opacity .15s; }
-  .node text { font-family:'Sora',sans-serif; font-size:9px; fill:#cbd5e1; pointer-events:none; transition:opacity .15s, fill .15s; }
-  .node.hovered text { fill:#fff; font-weight:700; font-size:10.5px; }
+  .node rect { cursor:pointer; transition:opacity .15s, stroke-width .12s; }
+  .node text { font-family:'Sora',sans-serif; font-size:10px; font-weight:600; fill:#e8eaf0; pointer-events:none; transition:opacity .15s, fill .15s; }
+  .node.hovered rect { stroke-width:2.5px; }
+  .node.hovered text { fill:#fff; }
   .dim { opacity:0.10 !important; }
 
 </style>
@@ -680,11 +681,11 @@ document.addEventListener('DOMContentLoaded', function () {
   const POS = a => TIER[a] || [0.90, 0.55];
 
   const sim = d3.forceSimulation(graph.nodes)
-    .force('link', d3.forceLink(graph.links).id(d => d.id).distance(70).strength(0.10))
+    .force('link', d3.forceLink(graph.links).id(d => d.id).distance(96).strength(0.10))
     .force('charge', d3.forceManyBody().strength(-140))
     .force('x', d3.forceX(d => POS(d.area)[0] * W).strength(0.22))
     .force('y', d3.forceY(d => POS(d.area)[1] * H).strength(0.45))
-    .force('collide', d3.forceCollide().radius(30));
+    .force('collide', d3.forceCollide().radius(d => d.boxW/2 + 10).strength(0.9));
 
   const link = g.append('g').selectAll('line')
     .data(graph.links).join('line').attr('class', 'link');
@@ -696,11 +697,18 @@ document.addEventListener('DOMContentLoaded', function () {
       .on('drag',  (e,d) => { d.fx=e.x; d.fy=e.y; })
       .on('end',   (e,d) => { if(!e.active) sim.alphaTarget(0); d.fx=null; d.fy=null; }));
 
-  node.append('circle')
-    .attr('r', d => 7 + Math.min(6, (neighbors.get(d.id).size-1)*1.5))
-    .attr('fill', d => colorOf(d));
-  node.append('text').attr('x', 11).attr('y', 4)
-    .text(d => d.title.length > 28 ? d.title.slice(0,27)+'…' : d.title);
+  const BOX_H = 26;
+  function label(d) { return d.title.length > 30 ? d.title.slice(0,29) + '…' : d.title; }
+  function boxW(d) { return Math.max(64, label(d).length * 6.1 + 20); }
+  graph.nodes.forEach(d => { d.boxW = boxW(d); d.boxH = BOX_H; });
+
+  node.append('rect')
+    .attr('x', d => -d.boxW/2).attr('y', -BOX_H/2)
+    .attr('width', d => d.boxW).attr('height', BOX_H).attr('rx', 7)
+    .attr('fill', '#161921').attr('fill-opacity', 0.96)
+    .attr('stroke', d => colorOf(d)).attr('stroke-width', 1.6);
+  node.append('text').attr('text-anchor', 'middle').attr('dy', '0.34em')
+    .text(d => label(d));
 
   sim.on('tick', () => {
     link.attr('x1', d=>d.source.x).attr('y1', d=>d.source.y)
