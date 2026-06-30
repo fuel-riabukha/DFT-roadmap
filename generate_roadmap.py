@@ -1086,6 +1086,35 @@ def _date_state(date_str):
     if d == cur: return "now"
     return "planned"
 
+def feature_detail_inner(f):
+    """Inner HTML for the feature detail modal: timeline + descriptions + document links.
+    Shared by the Board and Weekly pages."""
+    desc_rows = []
+    for lbl, key in (("Product", "desc_product"), ("GTM", "desc_gtm"), ("Client", "desc_client")):
+        v = clean_desc(f.get(key, ""))
+        if v:
+            desc_rows.append(f'<div class="md-desc"><h4>{lbl}</h4><p>{esc(v)}</p></div>')
+    desc_html = "".join(desc_rows) or '<div class="md-empty">No description in the sheet yet.</div>'
+
+    phases = [("Discovery", f.get("disc_date")), ("Delivery", f.get("deliver_date"))]
+    if f.get("pilot_date") and str(f.get("pilot_date")).strip().lower() not in ("", "nan", "none"):
+        phases.append(("Pilot", f.get("pilot_date")))
+    phases.append(("Release", f.get("rollout_date")))
+    cells = []
+    for _lbl, _dv in phases:
+        _st = _date_state(_dv)
+        _dt_txt = esc(_dv) if (_dv and str(_dv).strip().lower() not in ("", "nan", "none")) else "TBD"
+        cells.append(f'<div class="md-phase {_st}"><div class="md-phase-dot"></div>'
+                     f'<div class="md-phase-label">{_lbl}</div>'
+                     f'<div class="md-phase-date">{_dt_txt}</div></div>')
+    timeline_html = f'<div class="md-timeline-label">Planned timeline</div><div class="md-timeline">{"".join(cells)}</div>'
+
+    link_items = [f'<a class="md-link" href="{esc(url)}" target="_blank" rel="noopener">{esc(label)} ↗</a>'
+                  for (label, css, url) in (f.get("links") or [])]
+    links_html = (f'<div class="md-links-label">Documents</div><div class="md-links">{"".join(link_items)}</div>'
+                  if link_items else '<div class="md-links-label">Documents</div><div class="md-empty">No linked documents yet.</div>')
+    return timeline_html + desc_html + links_html
+
 def build_board_card(f):
     area = f["area"]
     color_var, area_label = AREA_CONFIG.get(area, ("--platform", area))
@@ -1118,36 +1147,7 @@ def build_board_card(f):
     over_attr = ' data-overdue="1"' if card_over else ""
     over_cls = " overdue-card" if card_over else ""
 
-    # ---- hidden detail payload (descriptions + document links) for the modal ----
-    desc_rows = []
-    for lbl, key in (("Product", "desc_product"), ("GTM", "desc_gtm"), ("Client", "desc_client")):
-        v = clean_desc(f.get(key, ""))
-        if v:
-            desc_rows.append(f'<div class="md-desc"><h4>{lbl}</h4><p>{esc(v)}</p></div>')
-    desc_html = "".join(desc_rows) or '<div class="md-empty">No description in the sheet yet.</div>'
-
-    # ---- planned-date timeline: Discovery -> Delivery -> (Pilot) -> Release ----
-    phases = [("Discovery", f.get("disc_date")), ("Delivery", f.get("deliver_date"))]
-    if f.get("pilot_date") and str(f.get("pilot_date")).strip().lower() not in ("", "nan", "none"):
-        phases.append(("Pilot", f.get("pilot_date")))
-    phases.append(("Release", f.get("rollout_date")))
-    cells = []
-    for _lbl, _dv in phases:
-        _st = _date_state(_dv)
-        _dt_txt = esc(_dv) if (_dv and str(_dv).strip().lower() not in ("", "nan", "none")) else "TBD"
-        cells.append(
-            f'<div class="md-phase {_st}"><div class="md-phase-dot"></div>'
-            f'<div class="md-phase-label">{_lbl}</div>'
-            f'<div class="md-phase-date">{_dt_txt}</div></div>'
-        )
-    timeline_html = f'<div class="md-timeline-label">Planned timeline</div><div class="md-timeline">{"".join(cells)}</div>'
-
-    link_items = []
-    for (label, css, url) in (f.get("links") or []):
-        link_items.append(f'<a class="md-link" href="{esc(url)}" target="_blank" rel="noopener">{esc(label)} ↗</a>')
-    links_html = (f'<div class="md-links-label">Documents</div><div class="md-links">{"".join(link_items)}</div>'
-                  if link_items else '<div class="md-links-label">Documents</div><div class="md-empty">No linked documents yet.</div>')
-    detail_html = f'<div class="bcard-detail" hidden>{timeline_html}{desc_html}{links_html}</div>'
+    detail_html = f'<div class="bcard-detail" hidden>{feature_detail_inner(f)}</div>'
 
     return (
         f'      <div class="bcard{over_cls}" data-area="{esc(area)}"{mkt_attr}{over_attr} style="border-left-color:var({color_var})">\n'
@@ -1336,10 +1336,12 @@ def generate_weekly(features):
             return placed, max(1, len(row_end))
 
         def bar_html(b, s, e, r):
-            f = b["f"]; cv, _ = AREA_CONFIG.get(f["area"], ("--platform", f["area"]))
-            return (f'<div class="bar" data-area="{esc(f["area"])}" title="{esc(f["title"])}" '
+            f = b["f"]; cv, alabel = AREA_CONFIG.get(f["area"], ("--platform", f["area"]))
+            return (f'<div class="bar" data-area="{esc(f["area"])}" data-title="{esc(f["title"])}" '
+                    f'data-color="{cv}" data-arealabel="{esc(alabel)}" title="{esc(f["title"])}" '
                     f'style="grid-column:{s+1}/{e+2};grid-row:{r+1};border-left-color:var({cv})">'
-                    f'<span class="bar-dot" style="background:var({cv})"></span>{esc(f["title"])}</div>')
+                    f'<span class="bar-dot" style="background:var({cv})"></span>{esc(f["title"])}'
+                    f'<div class="bcard-detail" hidden>{feature_detail_inner(f)}</div></div>')
 
         def grid_html(bars):
             placed, nrows = pack(bars)
