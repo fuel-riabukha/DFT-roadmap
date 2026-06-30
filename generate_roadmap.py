@@ -1284,7 +1284,8 @@ def generate_map(features):
 # (Discovery → Date of discovery end; Delivery → Date of delivery).
 # ═══════════════════════════════════════════════════════════════════════════
 
-WEEKLY_WINDOW_DAYS = {"discovery": 7, "delivery": 30}  # days before completion, per lane (discovery=1 week, delivery~4 weeks)
+WEEKLY_WINDOW_DAYS = {"discovery": 7, "delivery": 30, "finteam": 30}  # days before completion, per lane
+FIN_TEAM_AREAS = {"Agents (10 in MVP)", "Shared context (16 layers)", "Workflows"}  # shown only in the Fin team work lane
 
 def generate_weekly(features):
     import datetime as _dt
@@ -1293,20 +1294,24 @@ def generate_weekly(features):
     def monday(d):
         return d - _dt.timedelta(days=d.weekday())
 
-    lanes = {"discovery": [], "delivery": []}
+    lanes = {"discovery": [], "delivery": [], "finteam": []}
     def add_bar(lane, f, end_iso):
         try:
             end = _dt.date.fromisoformat(end_iso)
         except Exception:
             return
-        span = max(1, round(WEEKLY_WINDOW_DAYS[lane] / 7))   # whole weeks: discovery 2, delivery 4
+        span = max(1, round(WEEKLY_WINDOW_DAYS[lane] / 7))
         endMon = monday(end)
         lanes[lane].append({"f": f, "startMon": endMon - _dt.timedelta(weeks=span - 1), "endMon": endMon})
     for f in features:
+        if f.get("area") in FIN_TEAM_AREAS:
+            # Fin team work: only this lane, positioned by delivery date
+            if f.get("deliver_iso"): add_bar("finteam", f, f["deliver_iso"])
+            continue
         if f.get("disc_iso"):    add_bar("discovery", f, f["disc_iso"])
         if f.get("deliver_iso"): add_bar("delivery",  f, f["deliver_iso"])
 
-    all_bars = lanes["discovery"] + lanes["delivery"]
+    all_bars = lanes["discovery"] + lanes["delivery"] + lanes["finteam"]
     if not all_bars:
         weekly_html = ('<div class="weekly" id="weeklyView">'
                        '<div class="gantt-empty">No dated features yet — add discovery/delivery dates in the sheet.</div>'
@@ -1364,6 +1369,7 @@ def generate_weekly(features):
             f'<div class="gantt-row gantt-head"><div class="gantt-lane-label"></div>{head_html}</div>'
             f'<div class="gantt-row gantt-disc"><div class="gantt-lane-label disc">DISCOVERY</div>{grid_html(lanes["discovery"])}</div>'
             f'<div class="gantt-row gantt-deliv"><div class="gantt-lane-label deliv">DELIVERY</div>{grid_html(lanes["delivery"])}</div>'
+            f'<div class="gantt-row gantt-fin"><div class="gantt-lane-label fin">FIN TEAM WORK</div>{grid_html(lanes["finteam"])}</div>'
             '</div></div><!-- /weekly -->'
         )
 
