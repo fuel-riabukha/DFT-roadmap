@@ -450,6 +450,38 @@ AREA_ALIASES = {
     "Data integrations": "Data engine",
 }
 
+# Short labels for the filter buttons (fallback = the area string itself)
+AREA_FILTER_LABEL = {
+    "Platform foundations": "Platform",
+    "Data engine": "Data engine",
+    "Shared context (16 layers)": "Context",
+    "Agents (10 in MVP)": "Agents",
+    "Workflows": "Workflows",
+    "Cabinet \u2014 pages": "Cabinet",
+    "Agent settings UI": "Agent settings",
+    "Custom artifacts": "Artifacts",
+    "Slack-first interface": "Slack",
+    "Cross-cutting concerns": "Cross-cutting",
+    "AI Dev Acceleration": "AI Dev",
+    "Documentation Tool": "Docs Tool",
+}
+
+def build_filter_buttons(features, include_marketing=True):
+    """Render filter buttons only for areas actually present among features."""
+    present = [a for a in AREA_CONFIG if any(f.get("area") == a for f in features)]
+    extras = [a for a in dict.fromkeys(f.get("area") for f in features)
+              if a and a not in AREA_CONFIG]
+    btns = ['<button class="filter-btn active" data-filter="all">All</button>']
+    for a in present + extras:
+        lbl = AREA_FILTER_LABEL.get(a, a)
+        btns.append(f'<button class="filter-btn" data-filter="{esc(a)}">{esc(lbl)}</button>')
+    if include_marketing and any(f.get("marketing") for f in features):
+        btns.append('<button class="filter-btn" data-filter="marketing">✦ Marketing</button>')
+    return "\n    ".join(btns)
+
+def inject_filters(base, features, include_marketing=True):
+    return base.replace("<!--FILTER_BTNS-->", build_filter_buttons(features, include_marketing))
+
 
 # ═══════════════════════════════════════════════════════════════════════════
 # GOOGLE SHEETS READER
@@ -1170,6 +1202,7 @@ def generate_board(features):
     e = base.index('</div><!-- /board -->') + len('</div><!-- /board -->')
     base = base[:s] + board_html + base[e:]
     base = re.sub(r'Updated \w+ \d{4}', f'Updated {datetime.now().strftime("%B %Y")}', base)
+    base = inject_filters(base, features, include_marketing=True)
     open(base_path, "w", encoding="utf-8").write(base)
     print(f"✓  Saved board → {base_path}  " + str({k: len(v) for k, v in cols.items()}))
 
@@ -1238,6 +1271,7 @@ def generate_map(features):
     payload = json.dumps(graph, ensure_ascii=False)
     base = base[:s] + "\n" + payload + "\n" + base[e:]
     base = re.sub(r'Updated \w+ \d{4}', f'Updated {datetime.now().strftime("%B %Y")}', base)
+    base = inject_filters(base, features, include_marketing=False)
     open(base_path, "w", encoding="utf-8").write(base)
     print(f"✓  Saved map → {base_path}  nodes={len(graph['nodes'])} links={len(graph['links'])}")
 
@@ -1338,6 +1372,7 @@ def generate_weekly(features):
     eidx = base.index('</div><!-- /weekly -->') + len('</div><!-- /weekly -->')
     base = base[:sidx] + weekly_html + base[eidx:]
     base = re.sub(r'Updated \w+ \d{4}', f'Updated {datetime.now().strftime("%B %Y")}', base)
+    base = inject_filters(base, features, include_marketing=False)
     open(base_path, "w", encoding="utf-8").write(base)
     print(f"✓  Saved weekly → {base_path}  discovery={len(lanes['discovery'])} delivery={len(lanes['delivery'])}")
 
@@ -1437,6 +1472,7 @@ def generate(features, output_path):
     today = datetime.now().strftime("%B %Y")
     base = re.sub(r'Updated \w+ \d{4}', f'Updated {today}', base)
 
+    base = inject_filters(base, features, include_marketing=True)
     with open(output_path, "w", encoding="utf-8") as fh:
         fh.write(base)
 
