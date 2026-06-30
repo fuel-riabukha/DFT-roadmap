@@ -1181,7 +1181,7 @@ def generate_board(features):
     cols["planned"].sort(key=lambda f: _board_date_key(f, "deliver_date"))
 
     COLDEF = [
-        ("planned",   "Planned (MVP)",      "#6366f1"),
+        ("planned",   "Planned",            "#6366f1"),
         ("discovery", "Discovery",          "#f59e0b"),
         ("ready",     "Ready for delivery", "#eab308"),
         ("delivery",  "In delivery",        "#22c55e"),
