@@ -448,6 +448,8 @@ AREA_CONFIG = {
 # Normalize sheet area values that differ from AREA_CONFIG keys.
 AREA_ALIASES = {
     "Data integrations": "Data engine",
+    "Agents": "Agents (10 in MVP)",
+    "Context": "Shared context (16 layers)",
 }
 
 # Short labels for the filter buttons (fallback = the area string itself)
