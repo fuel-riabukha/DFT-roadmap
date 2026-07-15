@@ -61,7 +61,7 @@
   .sep { width: 1px; height: 13px; background: var(--border); margin: 0 2px; }
 
   /* DETAILED */
-  .timeline { display: grid; grid-auto-flow: column; grid-auto-columns: 340px; gap: 12px; overflow-x: auto; padding-bottom: 6px; }
+  .timeline { display: grid; grid-auto-flow: column; grid-auto-columns: 340px; gap: 12px; }
   .col-header { padding: 11px 13px; border-radius: 10px 10px 0 0; position: sticky; top: var(--header-h, 0px); z-index: 10; }
   .col-header .month { font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: #fff; }
   .col-header .subtitle { font-size: 10px; color: var(--muted); margin-top: 2px; }
@@ -162,7 +162,6 @@
   }
   /* Wrapper: button + timeline side by side */
   #timelineOuter { display: flex; align-items: flex-start; gap: 8px; }
-  #timelineOuter > #detailedView { flex: 1; min-width: 0; }
   #historyScroll .col-header { position: static; top: auto; }
 
   /* History: past cols in a horizontally scrollable strip */
