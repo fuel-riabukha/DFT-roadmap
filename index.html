@@ -18,7 +18,7 @@
     --aidev: #f97316; --docs: #0ea5e9;
     --ship: #22c55e; --discovery: #f59e0b; --planned: #6366f1;
   }
-  body { font-family: 'Sora', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 28px 28px; }
+  body { font-family: 'Sora', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 28px 28px;  overflow-x: hidden;}
 
   .header { margin-bottom: 20px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; position: sticky; top: 0; z-index: 100; background: #0d0f14; padding-top: 14px; margin-top: -14px; padding-bottom: 4px; }
   #stickyAnchor { height: 0; position: sticky; top: 0; z-index: 9; }
@@ -62,7 +62,7 @@
 
   /* DETAILED */
   .timeline { display: grid; grid-auto-flow: column; grid-auto-columns: 340px; gap: 12px; }
-  .col-header { padding: 11px 13px; border-radius: 10px 10px 0 0; position: sticky; top: var(--header-h, 0px); z-index: 10; }
+  .col-header { padding: 11px 13px; border-radius: 10px 10px 0 0; position: sticky; top: 0; z-index: 10; }
   .col-header .month { font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: #fff; }
   .col-header .subtitle { font-size: 10px; color: var(--muted); margin-top: 2px; }
   .col-now .col-header  { background: #0d1710; border-top: 2px solid var(--ship); }
@@ -163,6 +163,7 @@
   /* Wrapper: button + timeline side by side */
   #timelineOuter { display: flex; align-items: flex-start; gap: 8px; }
   #historyScroll .col-header { position: static; top: auto; }
+  #timelineOuter > #detailedView { flex: 1; min-width: 0; overflow-x: auto; padding-bottom: 6px; }
 
   /* History: past cols in a horizontally scrollable strip */
   #historyScroll {
