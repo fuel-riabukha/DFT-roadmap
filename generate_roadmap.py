@@ -671,7 +671,7 @@ def read_features(spreadsheet):
     seen = set()
 
     def add(title_raw, area, status, disc_date, deliver_date, internal, links,
-             sheet_status="", desc_gtm="", desc_product="", desc_client="", marketing=False,
+             sheet_status="", desc_gtm="", desc_product="", desc_client="", desc_output="", marketing=False,
              pilot_date="", rollout_date="", stage="", responsible="", connected="", deliver_iso="", disc_iso=""):
         title = TITLE_MAP.get(title_raw, title_raw)
         if title == "__SKIP__" or not title or title == "nan":
@@ -692,6 +692,7 @@ def read_features(spreadsheet):
             "desc_gtm": desc_gtm,
             "desc_product": desc_product,
             "desc_client": desc_client,
+            "desc_output": desc_output,
             "marketing": marketing,
             "pilot_date": pilot_date,
             "rollout_date": rollout_date,
@@ -729,6 +730,7 @@ def read_features(spreadsheet):
             links=get_links(row),
             sheet_status=sheet_status,
             desc_gtm=clean_desc(row.get("Desc GTM", "")),
+            desc_output=clean_desc(row.get("Output", "")),
             desc_product=clean_desc(row.get("Desc Product", "")),
             desc_client=clean_desc(row.get("Desc Client", "")),
             marketing=clean_bool(row.get("Is significant for separate marketing release?", False)),
@@ -763,6 +765,7 @@ def read_features(spreadsheet):
             links=get_links(row),
             sheet_status=sheet_status,
             desc_gtm=clean_desc(row.get("Desc GTM", "")),
+            desc_output=clean_desc(row.get("Output", "")),
             desc_product=clean_desc(row.get("Desc Product", "")),
             desc_client=clean_desc(row.get("Desc Client", "")),
             marketing=clean_bool(row.get("Is significant for separate marketing release?", False)),
@@ -791,6 +794,7 @@ def read_features(spreadsheet):
             internal=internal,
             links=get_links(row),
             desc_gtm=clean_desc(row.get("Desc GTM", "")),
+            desc_output=clean_desc(row.get("Output", "")),
             desc_product=clean_desc(row.get("Desc Product", "")),
             desc_client=clean_desc(row.get("Desc Client", "")),
             marketing=clean_bool(row.get("Is significant for separate marketing release?", False)),
@@ -817,6 +821,7 @@ def read_features(spreadsheet):
             internal=internal,
             links=get_links(row),
             desc_gtm=clean_desc(row.get("Desc GTM", "")),
+            desc_output=clean_desc(row.get("Output", "")),
             desc_product=clean_desc(row.get("Desc Product", "")),
             desc_client=clean_desc(row.get("Desc Client", "")),
             marketing=clean_bool(row.get("Is significant for separate marketing release?", False)),
@@ -849,6 +854,7 @@ def read_features(spreadsheet):
             internal=internal,
             links=get_links(row),
             desc_gtm=clean_desc(row.get("Desc GTM", "")),
+            desc_output=clean_desc(row.get("Output", "")),
             desc_product=clean_desc(row.get("Desc Product", "")),
             desc_client=clean_desc(row.get("Desc Client", "")),
             marketing=clean_bool(row.get("Is significant for separate marketing release?", False)),
@@ -877,6 +883,7 @@ def read_features(spreadsheet):
             internal=internal,
             links=[],
             desc_gtm=clean_desc(row.get("Desc GTM", "")),
+            desc_output=clean_desc(row.get("Output", "")),
             desc_product=clean_desc(row.get("Desc Product", "")),
             desc_client=clean_desc(row.get("Desc Client", "")),
             marketing=clean_bool(row.get("Is significant for separate marketing release?", False)),
@@ -902,6 +909,7 @@ def build_card(f):
     gtm     = f.get("desc_gtm")     or _desc[0]
     product = f.get("desc_product") or _desc[1]
     client  = f.get("desc_client")  or _desc[2]
+    output  = f.get("desc_output")  or "Coming soon — details will be added as discovery progresses."
     # sheet_status from Sheets overrides PROGRESS dict for In Delivery features
     sheet_status = f.get("sheet_status", "")
     SHEET_STATUS_PROGRESS = {
@@ -1000,9 +1008,9 @@ def build_card(f):
 {preview_html}        <div class="card-content">
           <div class="card-top"><div class="area-dot" style="background:var({color_var})"></div><span class="area-label" style="color:var({color_var})">{area_label.upper()}</span><span class="status-badge {badge}">{badge_label}</span>{mkt_badge_html}</div>
           <div class="card-title">{esc(title)}</div>
-          <div class="card-desc desc-gtm">{esc(gtm)}</div>
           <div class="card-desc desc-product">{esc(product)}</div>
-          <div class="card-desc desc-client">{esc(client)}</div>{meta_html}{lnk_html}
+          <div class="card-desc desc-client">{esc(client)}</div>
+          <div class="card-desc desc-output">{esc(output)}</div>{meta_html}{lnk_html}
         </div>
       </div>"""
 
@@ -1093,7 +1101,7 @@ def feature_detail_inner(f):
     """Inner HTML for the feature detail modal: timeline + descriptions + document links.
     Shared by the Board and Weekly pages."""
     desc_rows = []
-    for lbl, key in (("Product", "desc_product"), ("GTM", "desc_gtm"), ("Client", "desc_client")):
+    for lbl, key in (("Product", "desc_product"), ("Client", "desc_client"), ("Output", "desc_output")):
         v = clean_desc(f.get(key, ""))
         if v:
             desc_rows.append(f'<div class="md-desc"><h4>{lbl}</h4><p>{esc(v)}</p></div>')
@@ -1204,7 +1212,7 @@ def generate_board(features):
     s = base.index('<div class="board" id="boardView">')
     e = base.index('</div><!-- /board -->') + len('</div><!-- /board -->')
     base = base[:s] + board_html + base[e:]
-    base = re.sub(r'Updated \w+ \d{4}', f'Updated {datetime.now().strftime("%B %Y")}', base)
+    base = re.sub(r'Updated (?:\d{1,2} )?\w+ \d{4}', f'Updated {datetime.now().strftime("%-d %B %Y")}', base)
     base = inject_filters(base, features, include_marketing=True)
     open(base_path, "w", encoding="utf-8").write(base)
     print(f"✓  Saved board → {base_path}  " + str({k: len(v) for k, v in cols.items()}))
@@ -1273,7 +1281,7 @@ def generate_map(features):
     e = base.index('</script>', s)
     payload = json.dumps(graph, ensure_ascii=False)
     base = base[:s] + "\n" + payload + "\n" + base[e:]
-    base = re.sub(r'Updated \w+ \d{4}', f'Updated {datetime.now().strftime("%B %Y")}', base)
+    base = re.sub(r'Updated (?:\d{1,2} )?\w+ \d{4}', f'Updated {datetime.now().strftime("%-d %B %Y")}', base)
     base = inject_filters(base, features, include_marketing=False)
     open(base_path, "w", encoding="utf-8").write(base)
     print(f"✓  Saved map → {base_path}  nodes={len(graph['nodes'])} links={len(graph['links'])}")
@@ -1382,7 +1390,7 @@ def generate_weekly(features):
     sidx = base.index('<div class="weekly" id="weeklyView">')
     eidx = base.index('</div><!-- /weekly -->') + len('</div><!-- /weekly -->')
     base = base[:sidx] + weekly_html + base[eidx:]
-    base = re.sub(r'Updated \w+ \d{4}', f'Updated {datetime.now().strftime("%B %Y")}', base)
+    base = re.sub(r'Updated (?:\d{1,2} )?\w+ \d{4}', f'Updated {datetime.now().strftime("%-d %B %Y")}', base)
     base = inject_filters(base, features, include_marketing=False)
     open(base_path, "w", encoding="utf-8").write(base)
     print(f"✓  Saved weekly → {base_path}  discovery={len(lanes['discovery'])} delivery={len(lanes['delivery'])}")
@@ -1480,8 +1488,8 @@ def generate(features, output_path):
     base = base[:s] + summary_html + base[e:]
 
     # Update date in header
-    today = datetime.now().strftime("%B %Y")
-    base = re.sub(r'Updated \w+ \d{4}', f'Updated {today}', base)
+    today = datetime.now().strftime("%-d %B %Y")
+    base = re.sub(r'Updated (?:\d{1,2} )?\w+ \d{4}', f'Updated {today}', base)
 
     base = inject_filters(base, features, include_marketing=True)
     with open(output_path, "w", encoding="utf-8") as fh:

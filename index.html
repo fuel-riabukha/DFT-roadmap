@@ -218,7 +218,6 @@
   body.mode-external .sum-chip[data-internal="true"] { display: none !important; }
 
   /* Hide PRD links for GTM audience */
-  body[data-aud="gtm"] .lprd { display: none !important; }
   /* External mode — hide internal elements */
   body.mode-external .status-badge { display: none !important; }
   body.mode-external .card-links   { display: none !important; }
@@ -282,9 +281,9 @@
   .mode-btn-custom { color: #a78bfa !important; }
   .mode-btn-custom.active { background: rgba(167,139,250,0.15) !important; color: #a78bfa !important; }
 
-  body.mode-custom .card-desc.desc-gtm,
-  body.mode-custom .card-desc.desc-product { display: none !important; }
-  body.mode-custom .card-desc.desc-client  { display: block !important; }
+  body.mode-custom .card-desc.desc-product,
+  body.mode-custom .card-desc.desc-client { display: none !important; }
+  body.mode-custom .card-desc.desc-output  { display: block !important; }
   body.mode-custom .status-badge  { display: none !important; }
   body.mode-custom .card-links    { display: none !important; }
   body.mode-custom .card-meta     { display: none !important; }
@@ -451,23 +450,23 @@
 
   .audience-toggle { display: flex; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 8px; padding: 3px; gap: 2px; }
   .aud-btn { font-family: 'Sora', sans-serif; font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 6px; border: none; background: transparent; color: var(--muted); cursor: pointer; transition: all 0.15s; }
-  .aud-btn[data-aud="gtm"].active     { background: rgba(244,63,94,0.18);  color: #fb7185; }
   .aud-btn[data-aud="product"].active { background: rgba(139,92,246,0.18); color: #a78bfa; }
   .aud-btn[data-aud="client"].active  { background: rgba(16,185,129,0.18); color: #34d399; }
+  .aud-btn[data-aud="output"].active  { background: rgba(59,130,246,0.18); color: #60a5fa; }
 
   /* Audience description visibility — default hide all */
-  .card-desc.desc-gtm,
   .card-desc.desc-product,
-  .card-desc.desc-client { display: none; }
-  body[data-aud="gtm"]     .card-desc.desc-gtm     { display: block; }
-  body[data-aud="product"] .card-desc.desc-product  { display: block; }
-  body[data-aud="client"]  .card-desc.desc-client   { display: block; }
+  .card-desc.desc-client,
+  .card-desc.desc-output { display: none; }
+  body[data-aud="product"] .card-desc.desc-product { display: block; }
+  body[data-aud="client"]  .card-desc.desc-client  { display: block; }
+  body[data-aud="output"]  .card-desc.desc-output  { display: block; }
 
-  /* External always shows client desc, hides audience toggle */
-  body.mode-external .card-desc.desc-gtm,
-  body.mode-external .card-desc.desc-product { display: none !important; }
-  body.mode-external .card-desc.desc-client  { display: block !important; }
-  body.mode-external #audienceToggle         { display: none !important; }
+  /* External always shows Output desc, hides audience toggle */
+  body.mode-external .card-desc.desc-product,
+  body.mode-external .card-desc.desc-client { display: none !important; }
+  body.mode-external .card-desc.desc-output { display: block !important; }
+  body.mode-external #audienceToggle        { display: none !important; }
 
   /* Download button */
   .download-btn {
@@ -584,13 +583,12 @@
   </div>
   <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
     <div class="audience-toggle" id="audienceToggle">
-      <button class="aud-btn" data-aud="gtm">GTM</button>
-      <button class="aud-btn active" data-aud="product">Product</button>
+      <button class="aud-btn" data-aud="product">Product</button>
       <button class="aud-btn" data-aud="client">Client</button>
+      <button class="aud-btn active" data-aud="output">Output</button>
     </div>
     <div class="mode-toggle">
       <button class="mode-btn active" data-mode="detailed">Detailed</button>
-      <button class="mode-btn" data-mode="summary">Summary</button>
       <button class="mode-btn" data-mode="external">External</button>
       <button class="mode-btn mode-btn-custom" data-mode="custom">Custom</button>
     </div>
@@ -1564,7 +1562,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ── Audience toggle ───────────────────────────────────────────────────────
-  document.body.setAttribute('data-aud', 'product');
+  document.body.setAttribute('data-aud', 'output');
   document.querySelectorAll('.aud-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.aud-btn').forEach(b => b.classList.remove('active'));
